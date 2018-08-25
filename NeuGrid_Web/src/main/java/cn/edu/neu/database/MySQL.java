@@ -3,8 +3,12 @@ package cn.edu.neu.database;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+
+import net.sf.json.JSONArray;
+import net.sf.json.JSONObject;
 
 /**
  * 数据库层操作，实现数据访问与service的分离
@@ -25,13 +29,31 @@ public class MySQL {
     
     // 预编译数据库语句 / 防止SQL注入， 提高性能
     private static boolean isPrepared = false;
-    private static PreparedStatement statementGetStuID;
+    private static PreparedStatement statementGetAllClient;
     
     // 预编译语句结束
     public static void prepareSql() throws SQLException {
-    	statementGetStuID = conn.prepareStatement("SELECT student_id FROM `user` WHERE open_id = ?");
+    	statementGetAllClient = conn.prepareStatement("SELECT * FROM client");
     }
     
+	public static JSONArray getAllClients() throws ClassNotFoundException, SQLException {
+		MySQL.before();
+		// TODO:
+		ResultSet resultSet = statementGetAllClient.executeQuery();
+        JSONArray allClients = new JSONArray();
+        if (resultSet.next()) {
+        	JSONObject tempObj = new JSONObject();
+        	tempObj.put("client_id", resultSet.getString("CLIENT_ID"));
+        	tempObj.put("client_name", resultSet.getInt("CLIENT_NAME"));
+        	tempObj.put("address", resultSet.getString("ADDRESS"));
+        	tempObj.put("balance", resultSet.getString("BALANCE"));
+        	allClients.add(tempObj);
+        }
+        after();
+        return allClients;
+	}    
+	
+	/* 基础操作 */
     // 连接
     private static void connect() throws ClassNotFoundException, SQLException {
         if (conn == null || conn.isClosed()) { // 若连接为空或已关闭
@@ -54,12 +76,12 @@ public class MySQL {
         }
     }
 
-    protected static void before() throws SQLException, ClassNotFoundException {
+    private static void before() throws SQLException, ClassNotFoundException {
         connect();
         stmt = conn.createStatement();
     }
 
-    protected static void after() throws SQLException {
+    private static void after() throws SQLException {
         // disconnect(); // 暂时保持长连接
     }
 }
