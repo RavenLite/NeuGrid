@@ -20,14 +20,15 @@ import net.sf.json.JSONObject;
 @RequestMapping("/api")
 public class MainController {
     // 全部客户
-    @RequestMapping(value = "/getScore", method = {RequestMethod.POST})
+    @RequestMapping(value = "/getAllClients", method = {RequestMethod.POST})
     @ResponseBody
-    public JSONObject getScore(@RequestBody JSONObject jsonParam) throws Exception {
+    public JSONArray getAllClients() throws Exception {
+    	System.out.println("[INFO] api/getAllClients 收到访问请求，正在处理");
         //String yearTermNo = jsonParam.optString("term");
         JSONArray data = MySQL.getAllClients();
         String code = Constant.RESPONSE_CODE_SUCCESS_REALTIME; // 返回状态码
         String msg = "获取全部客户信息成功";// 返回信息
-        return response(code, msg, data);
+        return data;
     }
     
     private JSONObject response(String code, String msg, Object data) {

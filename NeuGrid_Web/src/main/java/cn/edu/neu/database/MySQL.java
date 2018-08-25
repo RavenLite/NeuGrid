@@ -41,10 +41,10 @@ public class MySQL {
 		// TODO:
 		ResultSet resultSet = statementGetAllClient.executeQuery();
         JSONArray allClients = new JSONArray();
-        if (resultSet.next()) {
+        while (resultSet.next()) {
         	JSONObject tempObj = new JSONObject();
         	tempObj.put("client_id", resultSet.getString("CLIENT_ID"));
-        	tempObj.put("client_name", resultSet.getInt("CLIENT_NAME"));
+        	tempObj.put("client_name", resultSet.getString("CLIENT_NAME"));
         	tempObj.put("address", resultSet.getString("ADDRESS"));
         	tempObj.put("balance", resultSet.getString("BALANCE"));
         	allClients.add(tempObj);
