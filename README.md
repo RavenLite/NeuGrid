@@ -1,5 +1,5 @@
 # NeuGrid
-<img src="https://github.com/Raven98/NeuGrid/blob/master/logo.png?raw=true" style="width: 100px">  
+<img src="https://github.com/Raven98/NeuGrid/blob/master/logo.png?raw=true" style="width: 50px">  
 
 <img src="https://img.shields.io/travis/:user/:repo.svg"> 
 <img src="https://img.shields.io/github/commits-since/SubtitleEdit/subtitleedit/0.2.3.svg"> 
