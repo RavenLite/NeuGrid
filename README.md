@@ -1,5 +1,5 @@
 # NeuGrid
-<img src="https://github.com/Raven98/NeuGrid/blob/master/logo.png?raw=true" style="width: 50px">  
+<img src="https://github.com/Raven98/NeuGrid/blob/master/logo.png?raw=true" style="max-width:15%">  
 
 <img src="https://img.shields.io/travis/:user/:repo.svg"> 
 <img src="https://img.shields.io/github/commits-since/SubtitleEdit/subtitleedit/0.2.3.svg"> 
@@ -27,3 +27,5 @@
 ### 其他
 - 数据库：MySQL 5.6
 - 数据库设计：powerdesigner, ProcessOn
+## 扫一扫体验(暂未开放)
+<img src="https://github.com/Raven98/NeuGrid/blob/master/search.png?raw=true" style="max-width:25%">  

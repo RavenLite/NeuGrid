@@ -29,32 +29,199 @@ public class MySQL {
     
     // 预编译数据库语句 / 防止SQL注入， 提高性能
     private static boolean isPrepared = false;
-    private static PreparedStatement statementGetAllClient;
+    
+    private static PreparedStatement statementGetAllClients;
+    private static PreparedStatement statementGetAllDevices;
+    private static PreparedStatement statementGetAllReaders;
+    private static PreparedStatement statementGetAllBanks;
+    
+    private static PreparedStatement statementAddClient;
+    
+    private static PreparedStatement statementGetClientByClientID;
+    private static PreparedStatement statementgetDevicesByClient_ID;
+    private static PreparedStatement statementgetCostsByClient_ID;
+    private static PreparedStatement statementgetTotalPaidFeeByClient_ID;
     
     // 预编译语句结束
     public static void prepareSql() throws SQLException {
-    	statementGetAllClient = conn.prepareStatement("SELECT * FROM client");
+    	statementGetAllClients = conn.prepareStatement("SELECT * FROM client");
+    	statementGetAllDevices = conn.prepareStatement("SELECT * FROM device");
+    	statementGetAllReaders = conn.prepareStatement("SELECT * FROM reader");
+    	statementGetAllBanks = conn.prepareStatement("SELECT * FROM bank");
+    	
+    	statementAddClient = conn.prepareStatement("insert into client (CLIENT_ID, CLIENT_NAME, ADDRESS, BALANCE) values (?, ?, ?, 0)");
+    	
+    	statementGetClientByClientID = conn.prepareStatement("SELECT * FROM client WHERE CLIENT_ID = ?");
+    	statementgetDevicesByClient_ID = conn.prepareStatement("SELECT * FROM device WHERE CLIENT_ID = ?");
+    	statementgetCostsByClient_ID = conn.prepareStatement("SELECT * FROM cost_log WHERE DEVICE_ID IN (SELECT DEVICE_ID FROM device WHERE CLIENT_ID = ?) and PAY_STATE = 0");
+    	statementgetTotalPaidFeeByClient_ID = conn.prepareStatement("SELECT sum(PAID_FEE) AS 'TOTAL_FEE' FROM cost_log WHERE DEVICE_ID IN (SELECT DEVICE_ID FROM device WHERE CLIENT_ID = ?) and PAY_STATE = 0");
     }
     
+    /* 1.获取某表全部记录 */
+    // 1.1获取全部客户信息
 	public static JSONArray getAllClients() throws ClassNotFoundException, SQLException {
-		MySQL.before();
-		// TODO:
-		ResultSet resultSet = statementGetAllClient.executeQuery();
-        JSONArray allClients = new JSONArray();
+		before();
+		
+		ResultSet resultSet = statementGetAllClients.executeQuery();
+        JSONArray result = new JSONArray();
         while (resultSet.next()) {
         	JSONObject tempObj = new JSONObject();
         	tempObj.put("client_id", resultSet.getString("CLIENT_ID"));
         	tempObj.put("client_name", resultSet.getString("CLIENT_NAME"));
         	tempObj.put("address", resultSet.getString("ADDRESS"));
         	tempObj.put("balance", resultSet.getString("BALANCE"));
-        	allClients.add(tempObj);
+        	result.add(tempObj);
         }
         after();
-        return allClients;
+        return result;
 	}    
+	// 1.2获取全部设备信息
+	public static JSONArray getAllDevices() throws ClassNotFoundException, SQLException {
+		before();
+		
+		ResultSet resultSet = statementGetAllDevices.executeQuery();
+        JSONArray result = new JSONArray();
+        while (resultSet.next()) {
+        	JSONObject tempObj = new JSONObject();
+        	tempObj.put("device_id", resultSet.getString("DEVICE_ID"));
+        	tempObj.put("client_id", resultSet.getString("CLIENT_ID"));
+        	tempObj.put("device_type", resultSet.getString("DEVICE_TYPE"));
+        	result.add(tempObj);
+        }
+        after();
+        return result;
+	}    
+	// 1.3获取全部抄表员信息
+	public static JSONArray getAllReaders() throws ClassNotFoundException, SQLException {
+		before();
+		
+		ResultSet resultSet = statementGetAllReaders.executeQuery();
+        JSONArray result = new JSONArray();
+        while (resultSet.next()) {
+        	JSONObject tempObj = new JSONObject();
+        	tempObj.put("reader_id", resultSet.getString("READER_ID"));
+        	tempObj.put("reader_name", resultSet.getString("READER_NAME"));
+        	result.add(tempObj);
+        }
+        after();
+        return result;
+	}    
+	// 1.4获取全部银行信息
+	public static JSONArray getAllBanks() throws ClassNotFoundException, SQLException {
+		before();
+		
+		ResultSet resultSet = statementGetAllBanks.executeQuery();
+        JSONArray result = new JSONArray();
+        while (resultSet.next()) {
+        	JSONObject tempObj = new JSONObject();
+        	tempObj.put("bank_id", resultSet.getString("BANK_ID"));
+        	tempObj.put("bank_name", resultSet.getString("BANK_NAME"));
+        	result.add(tempObj);
+        }
+        after();
+        return result;
+	}    
+
+	/* 2.向某表增加记录*/
+	// 2.1添加客户
+	public static boolean addClient(String client_id, String client_name, String address) throws ClassNotFoundException, SQLException {
+		statementAddClient.setInt(1, Integer.valueOf(client_id));
+		statementAddClient.setString(2, client_name);
+		statementAddClient.setString(3, address);
+		before();
+		
+		int count = statementAddClient.executeUpdate();
+		after();
+		return true;
+		
+	}
+	
+	/* 5.根据指定属性获取满足条件的记录 */
+	// 5.1根据CLIENT_ID获取单个用户信息(client)
+	public static JSONObject getClientByClientID(String client_id) throws ClassNotFoundException, SQLException {
+		before();
+		System.out.println("*"+client_id);
+		statementGetClientByClientID.setInt(1, Integer.valueOf(client_id));
+		ResultSet resultSet = statementGetClientByClientID.executeQuery();
+		JSONObject result = new JSONObject();
+		if(resultSet.next()) {
+			result.put("client_id", resultSet.getString("CLIENT_ID"));
+			result.put("client_name", resultSet.getString("CLIENT_NAME"));
+			result.put("address", resultSet.getString("ADDRESS"));
+			result.put("balance", resultSet.getString("BALANCE"));
+		}
+		after();
+		return result;
+		
+	}
+	
+	// 5.2根据CLIENT_ID获取某客户全部设备信息(device)
+	public static JSONArray getDevicesByClient_ID(String client_id) throws ClassNotFoundException, SQLException {
+		before();
+		
+		ResultSet resultSet = statementgetDevicesByClient_ID.executeQuery();
+        JSONArray devices = new JSONArray();
+        while (resultSet.next()) {
+        	JSONObject tempObj = new JSONObject();
+        	tempObj.put("device_id", resultSet.getString("DEVICE_ID"));
+        	tempObj.put("client_id", resultSet.getString("CLIENT_ID"));
+        	tempObj.put("device_type", resultSet.getString("DEVICE_TYPE"));
+        	devices.add(tempObj);
+        }
+        after();
+        return devices;
+	}
+	
+	// 5.3根据CLIENT_ID获取某客户全部账单信息(cost_log)
+	public static JSONArray getCostsByClient_ID(String client_id) throws ClassNotFoundException, SQLException {
+		before();
+
+		System.out.println("**"+client_id);
+		statementgetCostsByClient_ID.setInt(1, Integer.valueOf(client_id));
+		System.out.println(statementgetCostsByClient_ID);
+		ResultSet resultSet = statementgetCostsByClient_ID.executeQuery();
+        JSONArray devices = new JSONArray();
+        while (resultSet.next()) {
+        	JSONObject tempObj = new JSONObject();
+        	tempObj.put("cost_id", resultSet.getString("COST_ID"));
+        	tempObj.put("device_id", resultSet.getString("DEVICE_ID"));
+        	tempObj.put("date", resultSet.getString("DATE"));
+        	tempObj.put("begin_number", resultSet.getString("BEGIN_NUMBER"));
+        	tempObj.put("end_number", resultSet.getString("END_NUMBER"));
+        	tempObj.put("basic_cost", resultSet.getString("BASIC_COST"));
+        	tempObj.put("additional_cost_1", resultSet.getString("ADDITIONAL_COST_1"));
+        	tempObj.put("additional_cost_2", resultSet.getString("ADDITIONAL_COST_2"));
+        	tempObj.put("paid_fee", resultSet.getString("PAID_FEE"));
+        	tempObj.put("actual_fee", resultSet.getString("ACTUAL_FEE"));
+        	tempObj.put("late_fee", resultSet.getString("LATE_FEE"));
+        	tempObj.put("payable_date", resultSet.getString("PAYABLE_DATE"));
+        	tempObj.put("pay_date", resultSet.getString("PAY_DATE"));
+        	tempObj.put("already_fee", resultSet.getString("ALREADY_FEE"));
+        	tempObj.put("pay_state", resultSet.getString("PAY_STATE"));
+        	devices.add(tempObj);
+        }
+        after();
+        return devices;
+	}
+	
+	// 5.4根据CLIENT_ID获取该客户全部设备欠费总额
+	public static JSONObject getTotalPaidFeeByClient_ID(String client_id) throws ClassNotFoundException, SQLException {
+		before();
+		System.out.println("***"+client_id);
+		statementgetTotalPaidFeeByClient_ID.setInt(1, Integer.valueOf(client_id));
+		ResultSet resultSet = statementgetTotalPaidFeeByClient_ID.executeQuery();
+		JSONObject result = new JSONObject();
+		if(resultSet.next()) {
+			result.put("total_fee", resultSet.getString("TOTAL_FEE"));
+		}
+		after();
+		return result;
+		
+	}
+	
 	
 	/* 基础操作 */
-    // 连接
+    // 连接数据库
     private static void connect() throws ClassNotFoundException, SQLException {
         if (conn == null || conn.isClosed()) { // 若连接为空或已关闭
             Class.forName(JDBC_DRIVER);
@@ -68,7 +235,7 @@ public class MySQL {
         }
     }
 
-    // 断开
+    // 断开数据库
     private static void disconnect() throws SQLException {
         if (!conn.isClosed()) {
             conn.close();
@@ -76,11 +243,13 @@ public class MySQL {
         }
     }
 
+    // 前置操作
     private static void before() throws SQLException, ClassNotFoundException {
         connect();
         stmt = conn.createStatement();
     }
 
+    // 后置操作
     private static void after() throws SQLException {
         // disconnect(); // 暂时保持长连接
     }
