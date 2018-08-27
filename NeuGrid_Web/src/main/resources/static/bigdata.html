@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>东大电网 - 查询</title>
+    <title>东大电网 - 电网大数据</title>
     <meta content='width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no' name='viewport' />
 
     <!--[if lt IE 9]>
@@ -289,7 +289,7 @@
                         </a>
                     </li>
 
-                    <li class='active'>
+                    <li class=''>
                         <a href='search.html'>
                             <i class='icon-search'></i>
                             <span>查询</span>
@@ -400,7 +400,7 @@
                         </ul>
                     </li>
 
-                    <li class=''>
+                    <li class='active'>
                         <a href='bigdata.html'>
                             <i class='icon-bolt'></i>
                             <span>电网大数据</span>
@@ -416,209 +416,23 @@
             </div>
         </nav>
         <section id='content'>
-            <div class='container-fluid' id="app1">
+            <div class='container-fluid' id="app">
                 <div class='row-fluid' id='content-wrapper' style="height:50px">
                     <div class='span12'>
                         <div class='page-header'>
                             <h1 class='pull-left'>
-                                <i class='icon-search'></i>
-                                <span>客户搜索</span>
+                                <i class='icon-bolt'></i>
+                                <span>电网大数据</span>
                             </h1>
                         </div>
                     </div>
                 </div>
 
-                <div class='row-fluid'>
-                    <div class='span12 box bordered-box orange-border' style='margin-bottom:0;'>
-                        <div class='box-header banana-background'>
-                            <div class='title'>全部客户</div>
-                            <div class='actions'>
-                                <a href="#" class="btn box-remove btn-mini btn-link">
-                                    <i class='icon-remove'></i>
-                                </a>
-                                <a href="#" class="btn box-collapse btn-mini btn-link">
-                                    <i></i>
-                                </a>
-                            </div>
-                        </div>
-                        <div class='box-content box-no-padding'>
-                            <div class='responsive-table'>
-                                <div class='scrollable-area'>
-                                    <table class='data-table-column-filter table table-bordered table-striped' style='margin-bottom:0;'>
-                                        <thead>
-                                            <tr>
-                                                <th>
-                                                    序号
-                                                </th>
-                                                <th>
-                                                    ID
-                                                </th>
-                                                <th>
-                                                    姓名
-                                                </th>
-                                                <th>
-                                                    地址
-                                                </th>
-                                                <th>
-                                                    余额
-                                                </th>
-                                                <th>
-                                                    操作
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr v-for="(item,index) in gridData">
-                                                <td>{{index+1}}</td>
-                                                <td>{{item.client_id}}</td>
-                                                <td>{{item.client_name}}</td>
-                                                <td>{{item.address}}</td>
-                                                <td>{{item.balance}}</td>
-                                                <td>
-                                                    <div class='text-right'>
-                                                        <button class="btn btn-success" name="button" style="margin-bottom:5px" type="submit" v-on:click="select(index+1)">确定</button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        </tbody>
-                                        <tfoot>
-                                            <tr>
-                                                <th>序号</th>
-                                                <th>ID</th>
-                                                <th>姓名</th>
-                                                <th>地址</th>
-                                            </tr>
-                                        </tfoot>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class='row-fluid invoice' v-if="client_id != ''">
-                    <div class='span12 box'>
-                        <div class='box-content box-double-padding'>
-                            <div class='row-fluid'>
-                                <div class='invoice-header'>
-                                    <div class='invoice-title'>
-                                        {{client_name}}
-                                    </div>
-                                    <div class='invoice-number'>
-                                        <span class='invoice-name'>ID:</span>
-                                        <span class='invoice-no'>{{client_id}}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class='row-fluid'>
-                                <div class='span4 seller'>
-                                    <div class='lead text-contrast'>余额：￥{{balance}}</div>
-
-                                </div>
-                                <div class='span4 buyer'>
-                                    <div class='lead text-contrast'>
-                                        <i class='icon-globe'></i>住址：{{address}}</div>
-                                </div>
-                            </div>
-                            <div class='row-fluid'>
-                                <div class='span12'>
-                                    <div class='responsive-table'>
-                                        <div class='scrollable-area'>
-                                            <table class='table table-striped table-hover table-bordered'>
-                                                <thead>
-                                                    <tr>
-                                                        <th>Code</th>
-                                                        <th>Item</th>
-                                                        <th>
-                                                            <div class='text-center'>账单ID</div>
-                                                        </th>
-                                                        <th>
-                                                            <div class='text-right'>设备ID</div>
-                                                        </th>
-                                                        <th>
-                                                            <div class='text-right'>日期</div>
-                                                        </th>
-                                                        <th>
-                                                            <div class='text-right'>基础花费</div>
-                                                        </th>
-                                                        <th>
-                                                            <div class='text-right'>附加费1</div>
-                                                        </th>
-                                                        <th>
-                                                            <div class='text-right'>附加费2</div>
-                                                        </th>
-                                                        <th>
-                                                            <div class='text-right'>待支付</div>
-                                                        </th>
-                                                        <th>
-                                                            <div class='text-right'>实际支付</div>
-                                                        </th>
-                                                        <th>
-                                                            <div class='text-right'>违约金</div>
-                                                        </th>
-                                                        <th>
-                                                            <div class='text-right'>可付款日期</div>
-                                                        </th>
-                                                        <th>
-                                                            <div class='text-right'>付款日期</div>
-                                                        </th>
-                                                        <th>
-                                                            <div class='text-right'>已付费用</div>
-                                                        </th>
-                                                        <th>
-                                                            <div class='text-right'>付款状态</div>
-                                                        </th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    <tr v-for="(item,index) in gridData2">
-                                                        <td>{{item.cost_id}}</td>
-                                                        <td>{{item.device_id}}</td>
-                                                        <td>{{item.date}}</td>
-                                                        <td>{{item.begin_number}}</td>
-                                                        <td>{{item.end_number}}</td>
-                                                        <td><div class='text-right'>￥{{item.basic_cost}}</div></td>
-                                                        <td><div class='text-right'>￥{{item.additional_cost_1}}</div></td>
-                                                        <td><div class='text-right'>￥{{item.additional_cost_2}}</div></td>
-                                                        <td><div class='text-right'>￥{{item.paid_fee}}</div></td>
-                                                        <td><div class='text-right'>￥{{item.actual_fee}}</div></td>
-                                                        <td><div class='text-right'>￥{{item.late_fee}}</div></td>
-                                                        <td>{{item.payable_date}}</td>
-                                                        <td>{{item.pay_date}}</td>
-                                                        <td>{{item.already_fee}}</td>
-                                                        <td>{{item.pay_state}}</td>
-                                                    </tr>
-
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <hr class='hr-normal' />
-                            <div class='row-fluid'>
-                                <div class='span12'>
-                                    <div class='text-right text-contrast subtotal'>
-                                        欠费总额：￥{{total_fee}}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class='row-fluid'>
-                                <div class='span12'>
-                                    <div class='well comment'>
-                                        应收费用=基本费用+附加费用1+附加费用2
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                
             </div>
         </section>
     </div>
 
-    <script src="js/search.js"></script>
+    <script src="js/bigdata.js"></script>
     <!-- / jquery -->
     <script src='assets/javascripts/jquery/jquery.min.js' type='text/javascript'></script>
     <!-- / jquery mobile events (for touch and slide) -->

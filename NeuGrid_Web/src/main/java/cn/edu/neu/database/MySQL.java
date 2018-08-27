@@ -36,6 +36,9 @@ public class MySQL {
     private static PreparedStatement statementGetAllBanks;
     
     private static PreparedStatement statementAddClient;
+    private static PreparedStatement statementAddDevice;
+    private static PreparedStatement statementAddReader;
+    private static PreparedStatement statementAddBank;
     
     private static PreparedStatement statementGetClientByClientID;
     private static PreparedStatement statementgetDevicesByClient_ID;
@@ -50,6 +53,9 @@ public class MySQL {
     	statementGetAllBanks = conn.prepareStatement("SELECT * FROM bank");
     	
     	statementAddClient = conn.prepareStatement("insert into client (CLIENT_ID, CLIENT_NAME, ADDRESS, BALANCE) values (?, ?, ?, 0)");
+    	statementAddDevice = conn.prepareStatement("insert into device (DEVICE_ID, CLIENT_ID, DEVICE_TYPE) values (?, ?, ?)");
+    	statementAddReader = conn.prepareStatement("insert into reader (READER_ID, READER_NAME) values (?, ?)");
+    	statementAddBank = conn.prepareStatement("insert into bank (BANK_ID, BANK_NAME, ADDRESS, BALANCE) values (?, ?)");
     	
     	statementGetClientByClientID = conn.prepareStatement("SELECT * FROM client WHERE CLIENT_ID = ?");
     	statementgetDevicesByClient_ID = conn.prepareStatement("SELECT * FROM device WHERE CLIENT_ID = ?");
@@ -135,12 +141,47 @@ public class MySQL {
 		return true;
 		
 	}
+	// 2.2添加设备
+	public static boolean addDevice(String device_id, String client_id, String device_type) throws ClassNotFoundException, SQLException {
+		statementAddDevice.setInt(1, Integer.valueOf(device_id));
+		statementAddDevice.setInt(2, Integer.valueOf(client_id));
+		statementAddDevice.setString(3, device_type);
+		before();
+		
+		int count = statementAddDevice.executeUpdate();
+		after();
+		return true;
+		
+	}
+	// 2.3添加抄表员
+	public static boolean addReader(String reader_id, String reader_name) throws ClassNotFoundException, SQLException {
+		statementAddReader.setInt(1, Integer.valueOf(reader_id));
+		statementAddReader.setString(2, reader_name);
+		before();
+		
+		int count = statementAddReader.executeUpdate();
+		after();
+		return true;
+		
+	}
+	// 2.4添加银行
+	public static boolean addBank(String bank_id, String bank_name) throws ClassNotFoundException, SQLException {
+		statementAddBank.setInt(1, Integer.valueOf(bank_id));
+		statementAddBank.setString(2, bank_name);
+		before();
+		
+		int count = statementAddBank.executeUpdate();
+		after();
+		return true;
+		
+	}
+	
 	
 	/* 5.根据指定属性获取满足条件的记录 */
 	// 5.1根据CLIENT_ID获取单个用户信息(client)
 	public static JSONObject getClientByClientID(String client_id) throws ClassNotFoundException, SQLException {
 		before();
-		System.out.println("*"+client_id);
+
 		statementGetClientByClientID.setInt(1, Integer.valueOf(client_id));
 		ResultSet resultSet = statementGetClientByClientID.executeQuery();
 		JSONObject result = new JSONObject();
@@ -176,7 +217,6 @@ public class MySQL {
 	public static JSONArray getCostsByClient_ID(String client_id) throws ClassNotFoundException, SQLException {
 		before();
 
-		System.out.println("**"+client_id);
 		statementgetCostsByClient_ID.setInt(1, Integer.valueOf(client_id));
 		System.out.println(statementgetCostsByClient_ID);
 		ResultSet resultSet = statementgetCostsByClient_ID.executeQuery();
@@ -207,7 +247,7 @@ public class MySQL {
 	// 5.4根据CLIENT_ID获取该客户全部设备欠费总额
 	public static JSONObject getTotalPaidFeeByClient_ID(String client_id) throws ClassNotFoundException, SQLException {
 		before();
-		System.out.println("***"+client_id);
+		
 		statementgetTotalPaidFeeByClient_ID.setInt(1, Integer.valueOf(client_id));
 		ResultSet resultSet = statementgetTotalPaidFeeByClient_ID.executeQuery();
 		JSONObject result = new JSONObject();
