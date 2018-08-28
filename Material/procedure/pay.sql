@@ -22,8 +22,9 @@ BEGIN
 		DECLARE temp_transfer_id BIGINT; -- 银行流水id
 		-- DECLARE:找到该客户拥有的全部欠费清单
     DECLARE v_finished INTEGER DEFAULT 0;
-    DECLARE cost_log_cursor CURSOR FOR SELECT cost_id, paid_fee, actual_fee, late_fee, payable_date, pay_date, already_fee, pay_state FROM cost_log WHERE device_id=d_id ORDER BY TO_DAYS(date);
+    DECLARE cost_log_cursor CURSOR FOR SELECT cost_id, paid_fee, actual_fee, late_fee, payable_date, pay_date, already_fee, pay_state FROM cost_log WHERE device_id=d_id AND pay_state != '02' ORDER BY TO_DAYS(date);
 		DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_finished = 1;
+		DECLARE CONTINUE HANDLER FOR SQLEXCEPTION SELECT 'Exception';
 
 		-- 1.根据客户id修改客户余额，生成新的余额记录
 		-- 1.1获取原始余额，确定充值后余额
@@ -52,8 +53,8 @@ BEGIN
 		WHERE transfer_time = temp_now AND client_id = c_id;
 		
 		-- 1.4.3生成新的付款记录
-		INSERT INTO pay_log(client_id, device_id, pay_time, pay_amount, pay_type, bank_id, transfer_id, notes)
-		VALUES(c_id, d_id, temp_now, money, '01', b_id, temp_transfer_id,'');
+		INSERT INTO pay_log(client_id, device_id, pay_time, pay_amount, pay_type, bank_id, transfer_id)
+		VALUES(c_id, d_id, temp_now, money, '01', b_id, temp_transfer_id);
 		
 		-- 1.5判断设备类型
 		SELECT device_type INTO temp_device_type
@@ -70,7 +71,7 @@ BEGIN
     OPEN cost_log_cursor;
     pay: LOOP
 		FETCH cost_log_cursor INTO temp_cost_id, temp_paid_fee, temp_actual_fee, temp_late_fee, temp_payable_date, temp_pay_date, temp_already_fee, temp_pay_state;
-		SELECT v_finished, temp_paid_fee, temp_payable_fee, temp_already_fee;
+		SELECT v_finished, new_balance, temp_cost_id, temp_paid_fee, temp_actual_fee, temp_late_fee, temp_payable_date, temp_pay_date, temp_already_fee, temp_pay_state;
 				IF v_finished = 1 THEN 
 						LEAVE pay;
 				END IF;
@@ -78,10 +79,11 @@ BEGIN
 						LEAVE pay;
 				END IF;
 				-- 如果当前余额足够缴纳当前遍历到的账单
-				SET total_fee = calculate(temp_payable_date, temp_paid_fee, d_id); -- total_fee包含滞纳金的总花费
+				SET total_fee = calculate_late(temp_payable_date, temp_paid_fee, temp_device_type) + temp_paid_fee; -- total_fee包含滞纳金的总花费
 				-- 当前余额大于待缴费金额
 				IF new_balance >= (total_fee - temp_already_fee) THEN 
 						-- 更新客户余额并生成余额变化记录
+						SELECT '完整缴费', temp_cost_id;
 						SET new_balance = new_balance - (total_fee - temp_already_fee);
 						INSERT INTO balance_log(now_balance, client_id, action, date) VALUES(new_balance, c_id, '02', temp_now); -- 生成新的余额变动记录
 						UPDATE client SET balance = new_balance WHERE client_id = c_id; -- 更新用户余额
@@ -92,16 +94,16 @@ BEGIN
         END IF;
 				-- 当前余额小于待缴费金额，但不等于0
 				IF new_balance < (total_fee-temp_already_fee) THEN
+						SELECT '部分缴费', temp_cost_id;
+						-- 更新原有cost_log
+						UPDATE cost_log SET pay_date = temp_now, already_fee = new_balance + already_fee, pay_state = '03' WHERE cost_id = temp_cost_id;
 						-- 更新客户余额并生成余额变化记录
 						SET new_balance = 0; -- 余额一定会被花光变为0
 						INSERT INTO balance_log(now_balance, client_id, action, date) VALUES(new_balance, c_id, '02', temp_now); -- 生成新的余额变动记录
 						UPDATE client SET balance = new_balance WHERE client_id = c_id;
-						-- 更新原有cost_log
-						UPDATE cost_log SET pay_date = temp_now, already_fee = new_balance, pay_state = '03' WHERE cost_id = temp_cost_id;
 						-- 增加change_log
 						INSERT change_log(cost_id, actual_fee_1, late_fee_1, pay_date_1, already_fee_1, pay_state_1) VALUES(temp_cost_id, temp_actual_fee, temp_late_fee, temp_pay_date, temp_already_fee, temp_pay_state);
 				END IF;
-				
 		END LOOP pay;
     CLOSE cost_log_cursor;
 END
