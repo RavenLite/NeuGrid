@@ -1,8 +1,8 @@
 # NeuGrid
-<img src="https://github.com/Raven98/NeuGrid/blob/master/logo.png?raw=true" width="150px">
+<img src="https://github.com/Raven98/NeuGrid/blob/master/Material/images/logo.png?raw=true" width="150px">
 
 <img src="https://img.shields.io/travis/:user/:repo.svg"> 
-<img src="https://img.shields.io/github/commits-since/SubtitleEdit/subtitleedit/0.2.3.svg"> 
+<img src="https://img.shields.io/github/commits-since/SubtitleEdit/subtitleedit/0.2.3.svg">
 
 
 
@@ -12,6 +12,7 @@
 项目包含服务器端，网页客户端和微信小程序客户端。  
 - 网页客户端提供管理员功能；
 - 微信小程序端提供用户缴费和抄表员抄表功能，满足他们对移动使用的需求。
+- 实验课因为学院检修电网的原因少了两天时间!!!小程序端基本上没时间完成了···
 
 ## 技术选型
 ### 服务器端
@@ -28,4 +29,4 @@
 - 数据库：MySQL 5.6
 - 数据库设计：powerdesigner, ProcessOn
 ## 扫一扫体验(暂未开放)
-<img src="https://github.com/Raven98/NeuGrid/blob/master/search.png?raw=true" style="max-width:25%">  
+<img src="https://github.com/Raven98/NeuGrid/blob/master/Material/images/search.png?raw=true" style="max-width:25%">  

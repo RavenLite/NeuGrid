@@ -1,361 +1,364 @@
 /*==============================================================*/
 /* DBMS name:      MySQL 5.0                                    */
-/* Created on:     2018/8/24 10:12:14                           */
+/* CREATEd on:     2018/8/24 10:12:14                           */
 /*==============================================================*/
+DROP TABLE IF EXISTS transfer_log;
+DROP TABLE IF EXISTS total_log;
+DROP TABLE IF EXISTS read_log;
+DROP TABLE IF EXISTS pay_log;
+DROP TABLE IF EXISTS error_log;
+DROP TABLE IF EXISTS cost_log;
+DROP TABLE IF EXISTS change_log;
+DROP TABLE IF EXISTS balance_log;
+DROP TABLE IF EXISTS account;
+DROP TABLE IF EXISTS bank;
+DROP TABLE IF EXISTS client;
+DROP TABLE IF EXISTS code_table;
+DROP TABLE IF EXISTS device;
+DROP TABLE IF EXISTS reader;
 
-
-drop table if exists ACCOUNT;
-
-drop table if exists BANK;
-
-drop table if exists CLIENT;
-
-drop table if exists CODE_TABLE;
-
-drop index POWER_DEVICE_ID_PAYABLE_DATE on COST_LOG;
-
-drop table if exists COST_LOG;
-
-drop table if exists DEVICE;
-
-drop table if exists ERROR_LOG;
-
-drop table if exists PAY_LOG;
-
-drop table if exists READER;
-
-drop index METER_LOG_DEVICE_ID_MT_DATE on READ_LOG;
-
-drop table if exists READ_LOG;
-
-drop table if exists TOTAL_LOG;
-
-drop table if exists TRANSFER_LOG;
+-- CREATE SCHEMA neugrid;
+-- USE neugrid;
 
 /*==============================================================*/
-/* Table: ACCOUNT                                               */
+/* Table 1: ACCOUNT	                                               */
 /*==============================================================*/
-create table ACCOUNT
+CREATE TABLE account
 (
-   CLIENT_ID            bigint,
-   BANK_ID              varchar(9)
+   account_id			BIGINT AUTO_INCREMENT,  	-- 账户id
+   client_id            BIGINT,						-- 客户id
+   bank_id              VARCHAR(9),					-- 银行id
+   PRIMARY KEY (account_id)
 );
 
 /*==============================================================*/
-/* Table: BANK                                                  */
+/* Table 2: BANK                                                  */
 /*==============================================================*/
-create table BANK
+CREATE TABLE bank
 (
-   BANK_ID              VARCHAR(9) not null,
-   BANK_NAME            VARCHAR(30) not null,
-   primary key (BANK_ID)
+   bank_id              VARCHAR(9) NOT NULL,		-- 银行id
+   bank_name            VARCHAR(30) NOT NULL,		-- 银行名称
+   PRIMARY KEY (bank_id)
+);
+
+/*================================================================*/
+/* Table 3: CLIENT                                                */
+/*================================================================*/
+CREATE TABLE client
+(
+   client_id            BIGINT AUTO_INCREMENT,		-- 客户id，自增
+   client_name          VARCHAR(30) NOT NULL,		-- 客户姓名
+   ADDRESS              VARCHAR(90) NOT NULL,		-- 客户住址
+   BALANCE              DECIMAL(9,2),				-- 客户余额
+   PRIMARY KEY (client_id)
 );
 
 /*==============================================================*/
-/* Table: CLIENT                                                */
+/* Table 4: CODE_TABLE                                            */
 /*==============================================================*/
-create table CLIENT
+CREATE TABLE code_table
 (
-   CLIENT_ID            BIGINT not null,
-   CLIENT_NAME          VARCHAR(30) not null,
-   ADDRESS              VARCHAR(90) not null,
-   BALANCE              DECIMAL(9,2),
-   primary key (CLIENT_ID)
+   code_key                VARCHAR(30) NOT NULL,	-- 常量键
+   code_value              VARCHAR(9) NOT NULL,		-- 常量值
+   PRIMARY KEY (code_key)
 );
 
 /*==============================================================*/
-/* Table: CODE_TABLE                                            */
+/* Table 5: COST_LOG                                              */
 /*==============================================================*/
-create table CODE_TABLE
+CREATE TABLE cost_log
 (
-   C_KEY                VARCHAR(30) not null,
-   C_VALUE              VARCHAR(9) not null,
-   primary key (C_KEY)
+   cost_id              BIGINT AUTO_INCREMENT,		-- 账单id，自增
+   device_id            BIGINT NOT NULL,			-- 设备id
+   date                 DATETIME NOT NULL,			-- 生成日期
+   begin_number         BIGINT,						-- 初始表数
+   end_number           BIGINT,						-- 抄表表数
+   basic_cost           DECIMAL(9,2),				-- 基础花费
+   additional_cost_1    DECIMAL(9,2),				-- 附加费1
+   additional_cost_2    DECIMAL(9,2),				-- 附加费2
+   paid_fee             DECIMAL(9,2),				-- 待支付费用(基础花费+附加费1+附加费2)
+   actual_fee           DECIMAL(9,2),				-- 实际应付费用(待支付费用+滞纳金)
+   late_fee             DECIMAL(9,2),				-- 滞纳金
+   payable_date         DATETIME,					-- 应缴日期
+   pay_date             DATETIME,					-- 缴费日期
+   already_fee          DECIMAL(9,2) default 0.00,	-- 已交费用
+   pay_state            VARCHAR(9),					-- 缴费状态(01:未缴 02:已缴 03:部分缴)
+   PRIMARY KEY (cost_id)
 );
 
 /*==============================================================*/
-/* Table: COST_LOG                                              */
+/* Table 6: DEVICE                                                */
 /*==============================================================*/
-create table COST_LOG
+CREATE TABLE device
 (
-   COST_ID              BIGINT not null,
-   DEVICE_ID            BIGINT not null,
-   DATE                 DATETIME not null,
-   BEGIN_NUMBER         BIGINT,
-   END_NUMBER           BIGINT,
-   BASIC_COST           DECIMAL(9,2),
-   ADDITIONAL_COST_1    DECIMAL(9,2),
-   ADDITIONAL_COST_2    DECIMAL(9,2),
-   PAID_FEE             DECIMAL(9,2),
-   ACTUAL_FEE           DECIMAL(9,2),
-   LATE_FEE             DECIMAL(9,2),
-   PAYABLE_DATE         DATETIME,
-   PAY_DATE             DATETIME,
-   ALREADY_FEE          DECIMAL(9,2) default 0.00,
-   PAY_STATE            VARCHAR(1),
-   primary key (COST_ID)
+   device_id            BIGINT AUTO_INCREMENT,  	-- 设备id，自增
+   client_id            BIGINT NOT NULL,			-- 客户id
+   device_type          VARCHAR(2) NOT NULL,		-- 设备类型 01=个人 02=企业
+   PRIMARY KEY (device_id)
 );
 
 /*==============================================================*/
-/* Index: POWER_DEVICE_ID_PAYABLE_DATE                          */
+/* Table 7: ERROR_LOG                                             */
 /*==============================================================*/
-create unique index POWER_DEVICE_ID_PAYABLE_DATE on COST_LOG
+CREATE TABLE error_log
 (
-   DEVICE_ID,
-   PAYABLE_DATE
+   error_id             BIGINT AUTO_INCREMENT,		-- 错误id，自增
+   account_time         DATETIME NOT NULL,			-- 交易时间
+   bank_id              VARCHAR(9) NOT NULL,		-- 银行id
+   transfer_id          BIGINT NOT NULL,			-- 转账id
+   client_id            BIGINT NOT NULL,			-- 客户id
+   bank_amount          DECIMAL(9,2) NOT NULL,		-- 银行金额
+   enterprise_amount    DECIMAL(9,2) NOT NULL,		-- 企业金额
+   error_type           VARCHAR(20),				-- 错误类型 01=企业方无流水信息，02=银行方无流水信息  03=金额不等
+   PRIMARY KEY (error_id)
 );
 
 /*==============================================================*/
-/* Table: DEVICE                                                */
+/* Table 8: PAY_LOG                                               */
 /*==============================================================*/
-create table DEVICE
+CREATE TABLE pay_log
 (
-   DEVICE_ID            BIGINT not null,
-   CLIENT_ID            BIGINT not null,
-   DEVICE_TYPE          VARCHAR(2) not null,
-   primary key (DEVICE_ID)
+   pay_id               BIGINT AUTO_INCREMENT,		-- 缴费id
+   client_id            BIGINT NOT NULL,			-- 客户id
+   device_id            BIGINT NOT NULL,			-- 设备id
+   pay_time             DATETIME NOT NULL,			-- 缴费时间
+   pay_amount           DECIMAL(9,2) NOT NULL,		-- 缴费金额
+   pay_type             VARCHAR(9) NOT NULL,		-- 缴费类型	01=缴费，02=冲正
+   bank_id              VARCHAR(9),					-- 银行id
+   transfer_id          BIGINT,						-- 银行流水id
+   PRIMARY KEY (pay_id)
 );
 
 /*==============================================================*/
-/* Table: ERROR_LOG                                             */
+/* Table 9: READER                                                */
 /*==============================================================*/
-create table ERROR_LOG
+CREATE TABLE reader
 (
-   ERROR_ID             BIGINT not null,
-   ACCOUNT_TIME         DATETIME not null,
-   BANK_ID              VARCHAR(9) not null,
-   TRANSFER_ID          BIGINT not null,
-   CLIENT_ID            BIGINT not null,
-   BANK_AMOUNT          DECIMAL(9,2) not null,
-   ENTERPRISE_AMOUNT    DECIMAL(9,2) not null,
-   ACCOUNT_INFO         VARCHAR(30),
-   primary key (ERROR_ID)
+   reader_id            BIGINT NOT NULL,			-- 抄表员id
+   reader_name          VARCHAR(30) NOT NULL,		-- 抄表员姓名
+   PRIMARY KEY (reader_id)
 );
 
 /*==============================================================*/
-/* Table: PAY_LOG                                               */
+/* Table 10: READ_LOG                                              */
 /*==============================================================*/
-create table PAY_LOG
+CREATE TABLE read_log
 (
-   PAY_ID               BIGINT not null,
-   CLIENT_ID            BIGINT not null,
-   PAY_TIME             DATETIME not null,
-   PAY_AMOUNT           DECIMAL(9,2) not null,
-   PAY_TYPE             VARCHAR(2) not null,
-   BANK_ID              varchar(9),
-   TRANSFER_ID          bigint,
-   NOTES                VARCHAR(90),
-   primary key (PAY_ID)
+   read_id              BIGINT AUTO_INCREMENT,		-- 抄表记录id，自增
+   read_date            DATETIME NOT NULL,			-- 抄表日期
+   device_id            BIGINT NOT NULL,			-- 设备id
+   read_number          BIGINT NOT NULL,			-- 当前读数
+   reader_id            BIGINT,						-- 抄表员id
+   PRIMARY KEY (read_id)
 );
 
 /*==============================================================*/
-/* Table: READER                                                */
+/* Table 11: TOTAL_LOG                                             */
 /*==============================================================*/
-create table READER
+CREATE TABLE total_log
 (
-   READER_ID            BIGINT not null,
-   READER_NAME          VARCHAR(30) not null,
-   primary key (READER_ID)
+   total_id             BIGINT AUTO_INCREMENT,
+   account_date         DATETIME NOT NULL,
+   bank_id              VARCHAR(9) NOT NULL,
+   bank_count           BIGINT NOT NULL,
+   bank_amount          DECIMAL(9,2) NOT NULL,
+   enterprise_count     BIGINT NOT NULL,
+   enterprise_amount    DECIMAL(9,2) NOT NULL,
+   is_success           VARCHAR(2),
+   PRIMARY KEY (total_id)
 );
 
 /*==============================================================*/
-/* Table: READ_LOG                                              */
+/* Table 12: TRANSFER_LOG                                          */
 /*==============================================================*/
-create table READ_LOG
+CREATE TABLE transfer_log
 (
-   READ_ID              BIGINT not null,
-   READ_DATE            DATETIME not null,
-   DEVICE_ID            BIGINT not null,
-   CLIENT_ID            BIGINT not null,
-   READ_NUMBER          BIGINT not null,
-   READER_ID            BIGINT,
-   primary key (READ_ID)
+   transfer_id          BIGINT AUTO_INCREMENT,		-- 银行流水id，自增
+   bank_id              VARCHAR(9) NOT NULL,		-- 银行id
+   client_id            BIGINT NOT NULL,			-- 客户id
+   transfer_amount      DECIMAL(9,2) NOT NULL,		-- 转账金额
+   transfer_time        DATETIME NOT NULL,			-- 转账时间
+   PRIMARY KEY (transfer_id)
 );
 
 /*==============================================================*/
-/* Index: METER_LOG_DEVICE_ID_MT_DATE                           */
+/* Table 13: BALANCE_LOG                                          */
 /*==============================================================*/
-create unique index METER_LOG_DEVICE_ID_MT_DATE on READ_LOG
+CREATE TABLE balance_log
 (
-   DEVICE_ID,
-   READ_DATE
+   balance_id          	BIGINT AUTO_INCREMENT,		-- 余额变动id，自增
+   now_balance          DECIMAL(9,2),				-- 当前余额
+   client_id            BIGINT NOT NULL,			-- 客户id
+   action		      	VARCHAR(9),					-- 变动类型(01-转账，02-缴费，03-冲正)
+   date			        DATETIME NOT NULL,			-- 变动时间
+   PRIMARY KEY (balance_id)
 );
 
 /*==============================================================*/
-/* Table: TOTAL_LOG                                             */
+/* Table 14: CHANGE_LOG                                          */
 /*==============================================================*/
-create table TOTAL_LOG
+CREATE TABLE change_log
 (
-   TOTAL_ID             BIGINT not null,
-   ACCOUNT_DATE         DATETIME not null,
-   BANK_ID              VARCHAR(9) not null,
-   BANK_COUNT           BIGINT not null,
-   BANK_AMOUNT          DECIMAL(9,2) not null,
-   ENTERPRISE_COUNT     BIGINT not null,
-   ENTERPRISE_AMOUNT    DECIMAL(9,2) not null,
-   IS_SUCCESS           VARCHAR(2),
-   primary key (TOTAL_ID)
+   change_id          	BIGINT AUTO_INCREMENT,		-- 改变记录id，自增
+   cost_id          	BIGINT,						-- 关联的账单id
+   actual_fee_1         DECIMAL(9,2),				-- 改变前实际金额
+   late_fee_1		    DECIMAL(9,2),				-- 改变前滞纳金
+   pay_date_1			DATETIME,					-- 改变前付款日期
+   already_fee_1		DECIMAL(9,2),				-- 改变前已付款金额
+   pay_state_1			VARCHAR(2),					-- 改变前付款状态
+   PRIMARY KEY (change_id)
 );
 
-/*==============================================================*/
-/* Table: TRANSFER_LOG                                          */
-/*==============================================================*/
-create table TRANSFER_LOG
-(
-   TRANSFER_ID          BIGINT not null,
-   BANK_ID              VARCHAR(9) not null,
-   CLIENT_ID            BIGINT not null,
-   TRANSFER_AMOUNT      DECIMAL(9,2) not null,
-   TRANSFER_TIME        DATETIME not null,
-   primary key (TRANSFER_ID)
-);
+alter table ACCOUNT add constraint FK_Reference_10 foreign key (client_id)
+      references CLIENT (client_id) on delete restrict on update restrict;
 
-alter table ACCOUNT add constraint FK_Reference_10 foreign key (CLIENT_ID)
-      references CLIENT (CLIENT_ID) on delete restrict on update restrict;
+alter table ACCOUNT add constraint FK_Reference_11 foreign key (bank_id)
+      references BANK (bank_id) on delete restrict on update restrict;
 
-alter table ACCOUNT add constraint FK_Reference_11 foreign key (BANK_ID)
-      references BANK (BANK_ID) on delete restrict on update restrict;
+alter table COST_LOG add constraint POWER_RATE_LIST_device_id_FK foreign key (device_id)
+      references DEVICE (device_id);
 
-alter table COST_LOG add constraint POWER_RATE_LIST_DEVICE_ID_FK foreign key (DEVICE_ID)
-      references DEVICE (DEVICE_ID);
+alter table ERROR_LOG add constraint FK_Reference_8 foreign key (bank_id)
+      references BANK (bank_id) on delete restrict on update restrict;
 
-alter table ERROR_LOG add constraint FK_Reference_8 foreign key (BANK_ID)
-      references BANK (BANK_ID) on delete restrict on update restrict;
+alter table PAY_LOG add constraint PAY_LOG_CUSTOMER_ID_FK foreign key (client_id)
+      references CLIENT (client_id);
 
-alter table PAY_LOG add constraint PAY_LOG_CUSTOMER_ID_FK foreign key (CLIENT_ID)
-      references CLIENT (CLIENT_ID);
-
-alter table READ_LOG add constraint METER_LOG_CUSTOMER_ID_FK foreign key (CLIENT_ID)
-      references CLIENT (CLIENT_ID);
-
-alter table READ_LOG add constraint METER_LOG_DEVICE_ID_FK foreign key (DEVICE_ID)
-      references DEVICE (DEVICE_ID);
+alter table READ_LOG add constraint METER_LOG_device_id_FK foreign key (device_id)
+      references DEVICE (device_id);
 
 alter table READ_LOG add constraint METER_LOG_MR_ID_FK foreign key (READER_ID)
       references READER (READER_ID);
 
-alter table TOTAL_LOG add constraint FK_Reference_9 foreign key (BANK_ID)
-      references BANK (BANK_ID) on delete restrict on update restrict;
+alter table TOTAL_LOG add constraint FK_Reference_9 foreign key (bank_id)
+      references BANK (bank_id) on delete restrict on update restrict;
 
-alter table TRANSFER_LOG add constraint BANK_TRANSFER_CUSTOMER_ID_FK foreign key (CLIENT_ID)
-      references CLIENT (CLIENT_ID);
+alter table TRANSFER_LOG add constraint BANK_TRANSFER_CUSTOMER_ID_FK foreign key (client_id)
+      references CLIENT (client_id);
 
-alter table TRANSFER_LOG add constraint FK_Reference_7 foreign key (BANK_ID)
-      references BANK (BANK_ID) on delete restrict on update restrict;
+alter table TRANSFER_LOG add constraint FK_Reference_7 foreign key (bank_id)
+      references BANK (bank_id) on delete restrict on update restrict;
+	  
+alter table client AUTO_INCREMENT = 1000;
+alter table device AUTO_INCREMENT = 2000;
+alter table read_log AUTO_INCREMENT = 3000;
+alter table cost_log AUTO_INCREMENT = 4000;
+alter table transfer_log AUTO_INCREMENT = 5000;
+alter table pay_log AUTO_INCREMENT = 6000;
+alter table total_log AUTO_INCREMENT = 7000;
+alter table error_log AUTO_INCREMENT = 8000;
+alter table balance_log AUTO_INCREMENT = 9000;
+alter table account AUTO_INCREMENT = 10000;
+alter table change_log AUTO_INCREMENT = 11000;
 
 /*==============================================================*/
 /* Insert                                    					*/
 /*==============================================================*/
-insert into COST_LOG (COST_ID, DEVICE_ID, DATE, BEGIN_NUMBER, END_NUMBER, BASIC_COST, ADDITIONAL_COST_1, ADDITIONAL_COST_2, PAID_FEE, ACTUAL_FEE, LATE_FEE, PAYABLE_DATE, PAY_DATE, ALREADY_FEE, PAY_STATE)
-values (4006, 2006, str_to_date('07-07-2018', '%d-%m-%Y'), 0, 64, 31.36, 2.51, 4.7, 38.57, 40.19, 1.62, str_to_date('31-07-2018', '%d-%m-%Y'), str_to_date('19-08-2018 19:54:56', '%d-%m-%Y %H:%i:%s'), 40.19, '1');
-insert into COST_LOG (COST_ID, DEVICE_ID, DATE, BEGIN_NUMBER, END_NUMBER, BASIC_COST, ADDITIONAL_COST_1, ADDITIONAL_COST_2, PAID_FEE, ACTUAL_FEE, LATE_FEE, PAYABLE_DATE, PAY_DATE, ALREADY_FEE, PAY_STATE)
-values (4000, 2000, str_to_date('05-01-2018', '%d-%m-%Y'), 0, 50, 24.5, 1.96, 2.45, 28.91, null, null, str_to_date('31-01-2018', '%d-%m-%Y'), null, 0, '0');
-insert into COST_LOG (COST_ID, DEVICE_ID, DATE, BEGIN_NUMBER, END_NUMBER, BASIC_COST, ADDITIONAL_COST_1, ADDITIONAL_COST_2, PAID_FEE, ACTUAL_FEE, LATE_FEE, PAYABLE_DATE, PAY_DATE, ALREADY_FEE, PAY_STATE)
-values (4001, 2003, str_to_date('05-06-2018', '%d-%m-%Y'), 0, 75, 36.75, 2.94, 3.68, 43.37, null, null, str_to_date('30-06-2018', '%d-%m-%Y'), null, 0, '0');
-insert into COST_LOG (COST_ID, DEVICE_ID, DATE, BEGIN_NUMBER, END_NUMBER, BASIC_COST, ADDITIONAL_COST_1, ADDITIONAL_COST_2, PAID_FEE, ACTUAL_FEE, LATE_FEE, PAYABLE_DATE, PAY_DATE, ALREADY_FEE, PAY_STATE)
-values (4002, 2003, str_to_date('05-07-2018', '%d-%m-%Y'), 75, 175, 49, 3.92, 4.9, 57.82, null, null, str_to_date('31-07-2018', '%d-%m-%Y'), null, 0, '0');
-insert into COST_LOG (COST_ID, DEVICE_ID, DATE, BEGIN_NUMBER, END_NUMBER, BASIC_COST, ADDITIONAL_COST_1, ADDITIONAL_COST_2, PAID_FEE, ACTUAL_FEE, LATE_FEE, PAYABLE_DATE, PAY_DATE, ALREADY_FEE, PAY_STATE)
-values (4003, 2000, str_to_date('05-07-2018', '%d-%m-%Y'), 50, 90, 19.6, 1.57, 1.96, 23.13, null, null, str_to_date('31-07-2018', '%d-%m-%Y'), null, 0, '0');
-insert into COST_LOG (COST_ID, DEVICE_ID, DATE, BEGIN_NUMBER, END_NUMBER, BASIC_COST, ADDITIONAL_COST_1, ADDITIONAL_COST_2, PAID_FEE, ACTUAL_FEE, LATE_FEE, PAYABLE_DATE, PAY_DATE, ALREADY_FEE, PAY_STATE)
-values (4004, 2002, str_to_date('05-03-2018', '%d-%m-%Y'), 0, 90, 44.1, 3.53, 4.41, 52.04, 59.43, 7.39, str_to_date('31-03-2018', '%d-%m-%Y'), str_to_date('20-08-2018 00:46:27', '%d-%m-%Y %H:%i:%s'), 59.43, '1');
-insert into COST_LOG (COST_ID, DEVICE_ID, DATE, BEGIN_NUMBER, END_NUMBER, BASIC_COST, ADDITIONAL_COST_1, ADDITIONAL_COST_2, PAID_FEE, ACTUAL_FEE, LATE_FEE, PAYABLE_DATE, PAY_DATE, ALREADY_FEE, PAY_STATE)
-values (4005, 2002, str_to_date('05-04-2018', '%d-%m-%Y'), 90, 210, 58.8, 4.7, 5.88, 69.38, 77.15, 7.77, str_to_date('30-04-2018', '%d-%m-%Y'), str_to_date('20-08-2018 00:47:48', '%d-%m-%Y %H:%i:%s'), 77.15, '1');
-insert into COST_LOG (COST_ID, DEVICE_ID, DATE, BEGIN_NUMBER, END_NUMBER, BASIC_COST, ADDITIONAL_COST_1, ADDITIONAL_COST_2, PAID_FEE, ACTUAL_FEE, LATE_FEE, PAYABLE_DATE, PAY_DATE, ALREADY_FEE, PAY_STATE)
-values (4007, 2007, str_to_date('01-07-2018', '%d-%m-%Y'), 0, 98, 48.02, 3.84, 4.8, 56.66, null, null, str_to_date('31-07-2018', '%d-%m-%Y'), null, 0, '0');
+
+insert into CLIENT (client_name, ADDRESS, BALANCE)
+values ('裴行俭', '沈阳海润国际', 4.98);
+insert into CLIENT (client_name, ADDRESS, BALANCE)
+values ('秦良玉', '沈阳碧桂园银河城', 130.32);
+insert into CLIENT (client_name, ADDRESS, BALANCE)
+values ('潘育龙', '沈阳长白岛', 101.45);
+insert into CLIENT (client_name, ADDRESS, BALANCE)
+values ('卫青', '沈阳华强城', 90.81);
+insert into CLIENT (client_name, ADDRESS, BALANCE)
+values ('周亚夫', '沈阳恒大绿洲', 80);
 commit;
 
-insert into PAY_LOG (PAY_ID, CLIENT_ID, PAY_TIME, PAY_AMOUNT, PAY_TYPE, BANK_ID, TRANSFER_ID, NOTES)
-values (6000, 1001, str_to_date('20-08-2018 00:46:27', '%d-%m-%Y %H:%i:%s'), 100, '01', 'CMB', 5000, '4004');
-insert into PAY_LOG (PAY_ID, CLIENT_ID, PAY_TIME, PAY_AMOUNT, PAY_TYPE, BANK_ID, TRANSFER_ID, NOTES)
-values (6001, 1001, str_to_date('20-08-2018 00:47:48', '%d-%m-%Y %H:%i:%s'), 150, '01', 'CMB', 5001, '4005');
-insert into PAY_LOG (PAY_ID, CLIENT_ID, PAY_TIME, PAY_AMOUNT, PAY_TYPE, BANK_ID, TRANSFER_ID, NOTES)
-values (6002, 1003, str_to_date('20-08-2018 19:54:56', '%d-%m-%Y %H:%i:%s'), 81, '01', 'ICBC', 5002, '4006');
+insert into BANK (bank_id, BANK_NAME)
+values ('CMB', '中国招商银行');
+insert into BANK (bank_id, BANK_NAME)
+values ('CCB', '中国建设银行');
+insert into BANK (bank_id, BANK_NAME)
+values ('ICBC', '中国工商银行');
 commit;
 
-insert into PAY_LOG (PAY_ID, CLIENT_ID, PAY_TIME, PAY_AMOUNT, PAY_TYPE, BANK_ID, BT_ID, NOTES)
-values (6000, 1001, str_to_date('20-08-2018 00:46:27', '%d-%m-%Y %H:%i:%s'), 100, '01', 'CMB', 5000, '4004');
-insert into PAY_LOG (PAY_ID, CLIENT_ID, PAY_TIME, PAY_AMOUNT, PAY_TYPE, BANK_ID, BT_ID, NOTES)
-values (6001, 1001, str_to_date('20-08-2018 00:47:48', '%d-%m-%Y %H:%i:%s'), 150, '01', 'CMB', 5001, '4005');
-insert into PAY_LOG (PAY_ID, CLIENT_ID, PAY_TIME, PAY_AMOUNT, PAY_TYPE, BANK_ID, BT_ID, NOTES)
-values (6002, 1003, str_to_date('20-08-2018 19:54:56', '%d-%m-%Y %H:%i:%s'), 81, '01', 'ICBC', 5002, '4006');
+insert into CODE_TABLE (code_key, code_value)
+values ('每度电价格', '0.49');
+insert into CODE_TABLE (code_key, code_value)
+values ('居民当年违约金比例', '0.001');
+insert into CODE_TABLE (code_key, code_value)
+values ('居民跨年违约金比例', '0.001');
+insert into CODE_TABLE (code_key, code_value)
+values ('企业当年违约金比例', '0.002');
+insert into CODE_TABLE (code_key, code_value)
+values ('企业跨年违约金比例', '0.003');
 commit;
 
-insert into READ_LOG (READ_ID, READ_DATE, DEVICE_ID, CLIENT_ID, READ_NUMBER, READER_ID)
-values (3006, str_to_date('07-07-2018', '%d-%m-%Y'), 2006, 1003, 64, 1);
-insert into READ_LOG (READ_ID, READ_DATE, DEVICE_ID, CLIENT_ID, READ_NUMBER, READER_ID)
-values (3000, str_to_date('05-01-2018', '%d-%m-%Y'), 2000, 1000, 50, 1);
-insert into READ_LOG (READ_ID, READ_DATE, DEVICE_ID, CLIENT_ID, READ_NUMBER, READER_ID)
-values (3001, str_to_date('05-06-2018', '%d-%m-%Y'), 2003, 1002, 75, 1);
-insert into READ_LOG (READ_ID, READ_DATE, DEVICE_ID, CLIENT_ID, READ_NUMBER, READER_ID)
-values (3002, str_to_date('05-07-2018', '%d-%m-%Y'), 2003, 1002, 175, 1);
-insert into READ_LOG (READ_ID, READ_DATE, DEVICE_ID, CLIENT_ID, READ_NUMBER, READER_ID)
-values (3003, str_to_date('05-07-2018', '%d-%m-%Y'), 2000, 1000, 90, 1);
-insert into READ_LOG (READ_ID, READ_DATE, DEVICE_ID, CLIENT_ID, READ_NUMBER, READER_ID)
-values (3004, str_to_date('05-03-2018', '%d-%m-%Y'), 2002, 1001, 90, 1);
-insert into READ_LOG (READ_ID, READ_DATE, DEVICE_ID, CLIENT_ID, READ_NUMBER, READER_ID)
-values (3005, str_to_date('05-04-2018', '%d-%m-%Y'), 2002, 1001, 210, 1);
-insert into READ_LOG (READ_ID, READ_DATE, DEVICE_ID, CLIENT_ID, READ_NUMBER, READER_ID)
-values (3007, str_to_date('01-07-2018', '%d-%m-%Y'), 2007, 1004, 98, 1);
+insert into TRANSFER_LOG (bank_id, client_id, transfer_amount, transfer_time)
+values ('CMB', 1001, 100, str_to_date('20-08-2018 00:46:27', '%d-%m-%Y %H:%i:%s'));
+insert into TRANSFER_LOG (bank_id, client_id, transfer_amount, transfer_time)
+values ('CMB', 1001, 150, str_to_date('20-08-2018 00:47:48', '%d-%m-%Y %H:%i:%s'));
+insert into TRANSFER_LOG (bank_id, client_id, transfer_amount, transfer_time)
+values ('ICBC', 1003, 81, str_to_date('20-08-2018 19:54:56', '%d-%m-%Y %H:%i:%s'));
+insert into TRANSFER_LOG (bank_id, client_id, transfer_amount, transfer_time)
+values ('CMB', 1001, 50, str_to_date('20-08-2018 00:47:27', '%d-%m-%Y %H:%i:%s'));
 commit;
 
 insert into READER (READER_ID, READER_NAME)
 values (1, '王进宝');
 commit;
 
-insert into DEVICE (DEVICE_ID, CLIENT_ID, DEVICE_TYPE)
-values (2000, 1000, '01');
-insert into DEVICE (DEVICE_ID, CLIENT_ID, DEVICE_TYPE)
-values (2001, 1000, '02');
-insert into DEVICE (DEVICE_ID, CLIENT_ID, DEVICE_TYPE)
-values (2002, 1001, '01');
-insert into DEVICE (DEVICE_ID, CLIENT_ID, DEVICE_TYPE)
-values (2003, 1002, '01');
-insert into DEVICE (DEVICE_ID, CLIENT_ID, DEVICE_TYPE)
-values (2006, 1003, '02');
-insert into DEVICE (DEVICE_ID, CLIENT_ID, DEVICE_TYPE)
-values (2004, 1002, '02');
-insert into DEVICE (DEVICE_ID, CLIENT_ID, DEVICE_TYPE)
-values (2005, 1002, '01');
-insert into DEVICE (DEVICE_ID, CLIENT_ID, DEVICE_TYPE)
-values (2007, 1004, '01');
+insert into DEVICE (client_id, device_type)
+values (1000, '01');
+insert into DEVICE (client_id, device_type)
+values (1000, '02');
+insert into DEVICE (client_id, device_type)
+values (1001, '01');
+insert into DEVICE (client_id, device_type)
+values (1002, '01');
+insert into DEVICE (client_id, device_type)
+values (1003, '02');
+insert into DEVICE (client_id, device_type)
+values (1002, '02');
+insert into DEVICE (client_id, device_type)
+values (1002, '01');
+insert into DEVICE (client_id, device_type)
+values (1004, '01');
 commit;
 
-insert into CODE_TABLE (C_KEY, C_VALUE)
-values ('每度电价格', '0.49');
-insert into CODE_TABLE (C_KEY, C_VALUE)
-values ('居民当年违约金比例', '0.001');
-insert into CODE_TABLE (C_KEY, C_VALUE)
-values ('居民跨年违约金比例', '0.001');
-insert into CODE_TABLE (C_KEY, C_VALUE)
-values ('企业当年违约金比例', '0.002');
-insert into CODE_TABLE (C_KEY, C_VALUE)
-values ('企业跨年违约金比例', '0.003');
+insert into READ_LOG (READ_DATE, device_id, READ_NUMBER, READER_ID)
+values (str_to_date('07-07-2018', '%d-%m-%Y'), 2006, 64, 1);
+insert into READ_LOG (READ_DATE, device_id, READ_NUMBER, READER_ID)
+values (str_to_date('05-01-2018', '%d-%m-%Y'), 2000, 50, 1);
+insert into READ_LOG (READ_DATE, device_id, READ_NUMBER, READER_ID)
+values (str_to_date('05-06-2018', '%d-%m-%Y'), 2003, 75, 1);
+insert into READ_LOG (READ_DATE, device_id, READ_NUMBER, READER_ID)
+values (str_to_date('05-07-2018', '%d-%m-%Y'), 2003, 175, 1);
+insert into READ_LOG (READ_DATE, device_id, READ_NUMBER, READER_ID)
+values (str_to_date('05-07-2018', '%d-%m-%Y'), 2000, 90, 1);
+insert into READ_LOG (READ_DATE, device_id, READ_NUMBER, READER_ID)
+values (str_to_date('05-03-2018', '%d-%m-%Y'), 2002, 90, 1);
+insert into READ_LOG (READ_DATE, device_id, READ_NUMBER, READER_ID)
+values (str_to_date('05-04-2018', '%d-%m-%Y'), 2002, 210, 1);
+insert into READ_LOG (READ_DATE, device_id, READ_NUMBER, READER_ID)
+values (str_to_date('01-07-2018', '%d-%m-%Y'), 2007, 98, 1);
 commit;
 
-insert into TRANSFER_LOG (TRANSFER_ID, BANK_ID, CLIENT_ID, TRANSFER_AMOUNT, TRANSFER_TIME)
-values (5000, 'CMB', 1001, 100, str_to_date('20-08-2018 00:46:27', '%d-%m-%Y %H:%i:%s'));
-insert into TRANSFER_LOG (TRANSFER_ID, BANK_ID, CLIENT_ID, TRANSFER_AMOUNT, TRANSFER_TIME)
-values (5001, 'CMB', 1001, 150, str_to_date('20-08-2018 00:47:48', '%d-%m-%Y %H:%i:%s'));
-insert into TRANSFER_LOG (TRANSFER_ID, BANK_ID, CLIENT_ID, TRANSFER_AMOUNT, TRANSFER_TIME)
-values (5002, 'ICBC', 1003, 81, str_to_date('20-08-2018 19:54:56', '%d-%m-%Y %H:%i:%s'));
+insert into COST_LOG (DEVICE_ID, DATE, BEGIN_NUMBER, END_NUMBER, BASIC_COST, ADDITIONAL_COST_1, ADDITIONAL_COST_2, PAID_FEE, ACTUAL_FEE, LATE_FEE, PAYABLE_DATE, PAY_DATE, ALREADY_FEE, PAY_STATE)
+values (2006, str_to_date('07-07-2018', '%d-%m-%Y'), 0, 64, 31.36, 2.51, 4.7, 38.57, 40.19, 1.62, str_to_date('31-07-2018', '%d-%m-%Y'), str_to_date('19-08-2018 19:54:56', '%d-%m-%Y %H:%i:%s'), 40.19, '已缴');
+insert into COST_LOG (DEVICE_ID, DATE, BEGIN_NUMBER, END_NUMBER, BASIC_COST, ADDITIONAL_COST_1, ADDITIONAL_COST_2, PAID_FEE, ACTUAL_FEE, LATE_FEE, PAYABLE_DATE, PAY_DATE, ALREADY_FEE, PAY_STATE)
+values (2000, str_to_date('05-01-2018', '%d-%m-%Y'), 0, 50, 24.5, 1.96, 2.45, 28.91, null, null, str_to_date('31-01-2018', '%d-%m-%Y'), null, 0, '未缴');
+insert into COST_LOG (DEVICE_ID, DATE, BEGIN_NUMBER, END_NUMBER, BASIC_COST, ADDITIONAL_COST_1, ADDITIONAL_COST_2, PAID_FEE, ACTUAL_FEE, LATE_FEE, PAYABLE_DATE, PAY_DATE, ALREADY_FEE, PAY_STATE)
+values (2003, str_to_date('05-06-2018', '%d-%m-%Y'), 0, 75, 36.75, 2.94, 3.68, 43.37, null, null, str_to_date('30-06-2018', '%d-%m-%Y'), null, 0, '未缴');
+insert into COST_LOG (DEVICE_ID, DATE, BEGIN_NUMBER, END_NUMBER, BASIC_COST, ADDITIONAL_COST_1, ADDITIONAL_COST_2, PAID_FEE, ACTUAL_FEE, LATE_FEE, PAYABLE_DATE, PAY_DATE, ALREADY_FEE, PAY_STATE)
+values (2003, str_to_date('05-07-2018', '%d-%m-%Y'), 75, 175, 49, 3.92, 4.9, 57.82, null, null, str_to_date('31-07-2018', '%d-%m-%Y'), null, 0, '未缴');
+insert into COST_LOG (DEVICE_ID, DATE, BEGIN_NUMBER, END_NUMBER, BASIC_COST, ADDITIONAL_COST_1, ADDITIONAL_COST_2, PAID_FEE, ACTUAL_FEE, LATE_FEE, PAYABLE_DATE, PAY_DATE, ALREADY_FEE, PAY_STATE)
+values (2000, str_to_date('05-07-2018', '%d-%m-%Y'), 50, 90, 19.6, 1.57, 1.96, 23.13, null, null, str_to_date('31-07-2018', '%d-%m-%Y'), null, 0, '未缴');
+insert into COST_LOG (DEVICE_ID, DATE, BEGIN_NUMBER, END_NUMBER, BASIC_COST, ADDITIONAL_COST_1, ADDITIONAL_COST_2, PAID_FEE, ACTUAL_FEE, LATE_FEE, PAYABLE_DATE, PAY_DATE, ALREADY_FEE, PAY_STATE)
+values (2002, str_to_date('05-03-2018', '%d-%m-%Y'), 0, 90, 44.1, 3.53, 4.41, 52.04, 59.43, 7.39, str_to_date('31-03-2018', '%d-%m-%Y'), str_to_date('20-08-2018 00:46:27', '%d-%m-%Y %H:%i:%s'), 59.43, '已缴');
+insert into COST_LOG (DEVICE_ID, DATE, BEGIN_NUMBER, END_NUMBER, BASIC_COST, ADDITIONAL_COST_1, ADDITIONAL_COST_2, PAID_FEE, ACTUAL_FEE, LATE_FEE, PAYABLE_DATE, PAY_DATE, ALREADY_FEE, PAY_STATE)
+values (2002, str_to_date('05-04-2018', '%d-%m-%Y'), 90, 210, 58.8, 4.7, 5.88, 69.38, 77.15, 7.77, str_to_date('30-04-2018', '%d-%m-%Y'), str_to_date('20-08-2018 00:47:48', '%d-%m-%Y %H:%i:%s'), 77.15, '已缴');
+insert into COST_LOG (DEVICE_ID, DATE, BEGIN_NUMBER, END_NUMBER, BASIC_COST, ADDITIONAL_COST_1, ADDITIONAL_COST_2, PAID_FEE, ACTUAL_FEE, LATE_FEE, PAYABLE_DATE, PAY_DATE, ALREADY_FEE, PAY_STATE)
+values (2007, str_to_date('01-07-2018', '%d-%m-%Y'), 0, 98, 48.02, 3.84, 4.8, 56.66, null, null, str_to_date('31-07-2018', '%d-%m-%Y'), null, 0, '未缴');
 commit;
 
-insert into CLIENT (CLIENT_ID, CLIENT_NAME, ADDRESS, BALANCE)
-values (1000, '裴行俭', '沈阳海润国际', 4.98);
-insert into CLIENT (CLIENT_ID, CLIENT_NAME, ADDRESS, BALANCE)
-values (1001, '秦良玉', '沈阳碧桂园银河城', 130.32);
-insert into CLIENT (CLIENT_ID, CLIENT_NAME, ADDRESS, BALANCE)
-values (1002, '潘育龙', '沈阳长白岛', 101.45);
-insert into CLIENT (CLIENT_ID, CLIENT_NAME, ADDRESS, BALANCE)
-values (1003, '卫青', '沈阳华强城', 90.81);
-insert into CLIENT (CLIENT_ID, CLIENT_NAME, ADDRESS, BALANCE)
-values (1004, '周亚夫', '沈阳恒大绿洲', 80);
-commit;
-
-insert into BANK (BANK_ID, BANK_NAME)
-values ('CMB', '中国招商银行');
-insert into BANK (BANK_ID, BANK_NAME)
-values ('CCB', '中国建设银行');
-insert into BANK (BANK_ID, BANK_NAME)
-values ('ICBC', '中国工商银行');
+insert into PAY_LOG (client_id, device_id, PAY_TIME, PAY_AMOUNT, PAY_TYPE, bank_id, transfer_id)
+values (1001, 2002, str_to_date('20-08-2018 00:46:27', '%d-%m-%Y %H:%i:%s'), 100, '缴费', 'CMB', 5000);
+insert into PAY_LOG (client_id, device_id, PAY_TIME, PAY_AMOUNT, PAY_TYPE, bank_id, transfer_id)
+values (1001, 2002, str_to_date('20-08-2018 00:47:48', '%d-%m-%Y %H:%i:%s'), 150, '缴费', 'CMB', 5001);
+insert into PAY_LOG (client_id, device_id, PAY_TIME, PAY_AMOUNT, PAY_TYPE, bank_id, transfer_id)
+values (1003, 2004, str_to_date('20-08-2018 19:54:56', '%d-%m-%Y %H:%i:%s'), 81, '缴费', 'ICBC', 5002);
 commit;

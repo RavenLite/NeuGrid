@@ -1,0 +1,11 @@
+-Material
+	-design
+	ER和EER图、基于powerdesign的设计文档、数据库初始化sql及10个功能sql
+	-documents
+	实验文档及实验报告
+	-images
+	项目logo等
+	-procedure
+	存储过程
+	-show
+	答辩所用sql，根据老师的要求一步步展示
