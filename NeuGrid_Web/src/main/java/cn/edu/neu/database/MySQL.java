@@ -8,6 +8,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Timestamp;
 import java.sql.Types;
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -111,7 +112,7 @@ public class MySQL {
     public static JSONObject revert(String transfer_id) throws ClassNotFoundException, SQLException{
     	before();
     	
-    	CallableStatement cstmt = conn.prepareCall("{CALL pay(?, ?)}");
+    	CallableStatement cstmt = conn.prepareCall("{CALL revert(?, ?)}");
     	cstmt.setInt(1, Integer.valueOf(transfer_id));
     	cstmt.registerOutParameter(2, Types.VARCHAR);
     		
@@ -130,8 +131,10 @@ public class MySQL {
     	before();
     	
     	CallableStatement cstmt = conn.prepareCall("{CALL read_meter(?, ?, ?, ?)}");
-    	DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    	cstmt.setDate(1, (Date) sdf.parse(read_date));
+    	//DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+    	//cstmt.setDate(1, (Date) sdf.parse(read_date));
+    	//cstmt.setDate(1, new java.sql.Date(new java.util.Date(read_date).getTime()));
+    	cstmt.setTimestamp(1, new Timestamp(Long.valueOf(read_date)));
     	cstmt.setInt(2, Integer.valueOf(device_id));
     	cstmt.setInt(3, Integer.valueOf(read_number));
     	cstmt.setInt(4, Integer.valueOf(reader_id));
@@ -151,11 +154,12 @@ public class MySQL {
     	before();
     	
     	CallableStatement cstmt = conn.prepareCall("{CALL check_total(?, ?, ?, ?, ?)}");
-    	DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    	//DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     	cstmt.setString(1, bank_id);
     	cstmt.setInt(2, Integer.valueOf(count));
     	cstmt.setInt(3, Integer.valueOf(amount));
-    	cstmt.setDate(4, (Date) sdf.parse(date));
+    	//cstmt.setDate(4, (Date) sdf.parse(date));
+    	cstmt.setTimestamp(4, new Timestamp(Long.valueOf(date)));
     	cstmt.registerOutParameter(5, Types.VARCHAR);
     		
 		cstmt.execute();
@@ -173,9 +177,10 @@ public class MySQL {
     	before();
     	
     	CallableStatement cstmt = conn.prepareCall("{CALL check_detail(?, ?)}");
-    	DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    	//DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
     	cstmt.setString(1, bank_id);
-    	cstmt.setDate(2, (Date) sdf.parse(date));
+    	//cstmt.setDate(2, (Date) sdf.parse(date));
+    	cstmt.setTimestamp(2, new Timestamp(Long.valueOf(date)));
     		
 		cstmt.execute();
 		String state = "对明细成功";

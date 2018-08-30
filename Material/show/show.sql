@@ -1,3 +1,9 @@
+-- 添加数据用于测试查找用电量前三位用户
+CALL read_meter(str_to_date('01-01-2019', '%d-%m-%Y'), 2002, 330, 1);
+CALL read_meter(str_to_date('01-02-2019', '%d-%m-%Y'), 2002, 370, 1);
+CALL read_meter(str_to_date('02-01-2019', '%d-%m-%Y'), 2003, 150, 1);
+CALL read_meter(str_to_date('03-02-2019', '%d-%m-%Y'), 2003, 300, 1);
+
 -- 1.基础管理
 -- 1.1创建新用户
 -- 1.1.1创建用户1，余额0元
@@ -30,11 +36,11 @@ WHERE (pay_state = '未缴' OR pay_state = '部分缴')
 GROUP BY client_id;
 
 -- 1.5查询出某个月用电量最高的3名用户
-SELECT MONTH(A.date) AS 'MONTH', client_id, client_name
-FROM cost_log A JOIN client USING(client_id)
-WHERE (SELECT count(client_id)
-	   FROM cost_log B
-	   WHERE (MONTH(A.date) = MONTH(B.date)) AND B.end_number - B.begin_number > A.end_number - A.begin_number) <= 2;
+SELECT client_id, client_name, sum(end_number - begin_number) AS '用电量'
+FROM cost_log JOIN (device JOIN client USING(client_id)) USING(device_id)
+WHERE YEAR(date) = 2019 AND MONTH(date) = 2
+GROUP BY client_id
+ORDER BY 用电量 DESC;
 		 
 -- 2.抄表
 -- 2.1新电表抄表一次，时间为9月
@@ -52,6 +58,8 @@ CALL read_meter(str_to_date('01-11-2018', '%d-%m-%Y'), 2008, 320, 1);
 CALL read_meter(str_to_date('01-12-2018', '%d-%m-%Y'), 2008, 420, 1);
 CALL read_meter(str_to_date('01-01-2019', '%d-%m-%Y'), 2008, 540, 1);
 CALL read_meter(str_to_date('01-02-2019', '%d-%m-%Y'), 2008, 640, 1);
+
+
 -- 2.2.2查询出所有欠费超过半年的用户
 SELECT DISTINCT client_id, client_name, address, balance
 FROM cost_log JOIN (device JOIN client USING(client_id)) USING(device_id)
@@ -61,17 +69,15 @@ SELECT client_id, client_name, sum(paid_fee) AS '欠费总额', sum(paid_fee + c
 FROM cost_log  JOIN (device JOIN client USING(client_id)) USING(device_id)
 WHERE (pay_state = '未缴' OR pay_state = '部分缴') AND client_id = 1005; -- 在这里选择修改欲查询的用户，用户1为1005，用户2为1006
 -- 2.2.4查询出某个月用电量最高的3名用户
-SELECT MONTH(A.date) AS 'MONTH', client_id, client_name
-FROM cost_log A JOIN client USING(client_id)
-WHERE (SELECT count(client_id)
-	   FROM cost_log B
-	   WHERE (MONTH(A.date) = MONTH(B.date)) AND B.end_number - B.begin_number > A.end_number - A.begin_number) <= 2;
+SELECT client_id, client_name, sum(end_number - begin_number) AS '用电量'
+FROM cost_log JOIN (device JOIN client USING(client_id)) USING(device_id)
+WHERE YEAR(date) = 2019 AND MONTH(date) = 2
+GROUP BY client_id
+ORDER BY 用电量 DESC;
 
 -- 2.3查询抄表记录
 -- 2.3.1查看欠费清单跟滞纳金
 SELECT * FROM cost_log;
--- 2.3.2查看余额变化记录
-SELECT * FROM balance_log;
 
 -- 3.缴费
 -- 3.1查询欠费清单
@@ -156,7 +162,7 @@ SELECT * FROM cost_log;
 -- 4.对账
 -- 4.1对总账
 -- 4.1.1执行对总账，核对2019-02-20日账单
-CALL check_total('CMB', 3, 600, str_to_date('20-02-2019', '%d-%m-%Y'), @state5); -- 3和600是提前算好的
+CALL check_total('CMB', 2, 600, str_to_date('20-02-2019', '%d-%m-%Y'), @state5); -- 3和600是提前算好的
 SELECT @state5;
 -- 4.1.1查看对总账存储过程
 SELECT * FROM total_log;

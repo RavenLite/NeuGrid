@@ -3,19 +3,19 @@ new Vue({
     data: {
         gridData: [],
         apiUrl: 'http://localhost:8080/api/read',
-        client_id: '',
-        money: '',
-        bank_id: '',
-        device_id:'',
+        read_date: '',
+        device_id: '',
+        read_number: '',
+        reader_id:'',
         state:''
     },
     methods: {
         submit(){
-            console.log(this.client_id);
-            console.log(this.money);
-            console.log(this.bank_id);
+            console.log(this.read_date);
             console.log(this.device_id);
-            this.$http.get(this.apiUrl,{params: {client_id: this.client_id, money: this.money, bank_id: this.bank_id, device_id: this.device_id}}).then((response) => {
+            console.log(this.read_number);
+            console.log(this.reader_id);
+            this.$http.get(this.apiUrl,{params: {read_date: "20180828", device_id: this.device_id, read_number: this.read_number, reader_id: this.reader_id}}).then((response) => {
                 console.log(response);
                 this.state = response.body.data.state;
                 console.log("state:" + this.state);

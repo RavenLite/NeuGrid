@@ -458,15 +458,15 @@
                                         <label class='control-label'><strong>选择银行</strong></label>
                                         <div class='controls'>
                                             <label class='radio'>
-                                                <input type='radio' value='CCB' name="myradio" v-model="bank_id" />
+                                                <input type='radio' value='CCB' name="myradio" v-model="bank_id_1" />
                                                 <img src="./images/CCB.jpg" style="width:400px">
                                             </label>
                                             <label class='radio'>
-                                                <input type='radio' value='CMB' name="myradio" v-model="bank_id" />
+                                                <input type='radio' value='CMB' name="myradio" v-model="bank_id_1" />
                                                 <img src="./images/CMB.jpg" style="width:300px">
                                             </label>
                                             <label class='radio'>
-                                                <input type='radio' value='ICBC' name="myradio" v-model="bank_id" />
+                                                <input type='radio' value='ICBC' name="myradio" v-model="bank_id_1" />
                                                 <img src="./images/ICBC.jpg" style="width:400px">
                                             </label>
                                         </div>
@@ -474,7 +474,7 @@
                                     <div class='control-group'>
                                         <label class='control-label' for='inputText1'><strong>交易笔数</strong></label>
                                         <div class='controls'>
-                                            <input id='inputText1' placeholder='' type='text' v-model="client_id" />
+                                            <input id='inputText1' placeholder='' type='text' v-model="count" />
                                         </div>
                                     </div>
                                     <div class='control-group'>
@@ -492,7 +492,7 @@
                                         <div>
                                             <div class='datetimepicker input-append' id='datetimepicker'>
                                                 <input class='input-medium' data-format='MM/dd/yyyy HH:mm:ss PP'
-                                                    placeholder='Select timepicker' type='text' v-model="read_date" />
+                                                    placeholder='Select timepicker' type='text' v-model="read_date_1" />
                                                 <span class='add-on'>
                                                     <i data-date-icon='icon-calendar' data-time-icon='icon-time'></i>
                                                 </span>
@@ -512,7 +512,7 @@
                                 </div>
                             </fieldset>
                             <hr class='hr-normal' />
-                            <div class='form-actions' style='margin-bottom: 0;' v-on:click="submit()">
+                            <div class='form-actions' style='margin-bottom: 0;' v-on:click="submit1()">
                                 <div class='text-left'>
                                     <div class='btn btn-primary btn-large'>
                                         <i class='icon-save'></i>
@@ -547,15 +547,15 @@
                                         <label class='control-label'><strong>选择银行</strong></label>
                                         <div class='controls'>
                                             <label class='radio'>
-                                                <input type='radio' value='CCB' name="myradio" v-model="bank_id" />
+                                                <input type='radio' value='CCB' name="myradio" v-model="bank_id_2" />
                                                 <img src="./images/CCB.jpg" style="width:400px">
                                             </label>
                                             <label class='radio'>
-                                                <input type='radio' value='CMB' name="myradio" v-model="bank_id" />
+                                                <input type='radio' value='CMB' name="myradio" v-model="bank_id_2" />
                                                 <img src="./images/CMB.jpg" style="width:300px">
                                             </label>
                                             <label class='radio'>
-                                                <input type='radio' value='ICBC' name="myradio" v-model="bank_id" />
+                                                <input type='radio' value='ICBC' name="myradio" v-model="bank_id_2" />
                                                 <img src="./images/ICBC.jpg" style="width:400px">
                                             </label>
                                         </div>
@@ -565,7 +565,7 @@
                                         <div>
                                             <div class='datetimepicker input-append' id='datetimepicker'>
                                                 <input class='input-medium' data-format='MM/dd/yyyy HH:mm:ss PP'
-                                                    placeholder='Select timepicker' type='text' v-model="read_date" />
+                                                    placeholder='Select timepicker' type='text' v-model="read_date_2" />
                                                 <span class='add-on'>
                                                     <i data-date-icon='icon-calendar' data-time-icon='icon-time'></i>
                                                 </span>
@@ -585,7 +585,7 @@
                                 </div>
                             </fieldset>
                             <hr class='hr-normal' />
-                            <div class='form-actions' style='margin-bottom: 0;' v-on:click="submit()">
+                            <div class='form-actions' style='margin-bottom: 0;' v-on:click="submit2()">
                                 <div class='text-left'>
                                     <div class='btn btn-primary btn-large'>
                                         <i class='icon-save'></i>
