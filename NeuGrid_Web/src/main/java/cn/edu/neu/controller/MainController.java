@@ -2,6 +2,7 @@ package cn.edu.neu.controller;
 
 
 import java.sql.SQLException;
+import java.text.ParseException;
 
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -107,6 +108,73 @@ public class MainController {
     	MySQL.addBank(bank_id, bank_name);
         String code = Constant.RESPONSE_CODE_SUCCESS_REALTIME; // 返回状态码
         String msg = "添加银行信息成功";// 返回信息
+    }
+    
+    /* 4.六大存储过程功能类 */
+    // 4.1缴费
+    @RequestMapping(value = "/pay", method = {RequestMethod.GET})
+    public JSONObject pay(@RequestParam("client_id") String client_id, @RequestParam("money") String money, @RequestParam("bank_id") String bank_id, @RequestParam("device_id") String device_id) throws ClassNotFoundException, SQLException {
+    	System.out.println("[INFO] /api/pay 收到访问请求，正在处理");
+    	
+    	JSONObject data = MySQL.pay(client_id, client_id, bank_id, device_id);
+        String code = Constant.RESPONSE_CODE_SUCCESS_REALTIME; // 返回状态码
+        String msg = "缴费请求成功";// 返回信息
+        return response(code, msg, data);
+    }
+    
+    // 4.2冲正
+    @RequestMapping(value = "/revert", method = {RequestMethod.GET})
+    public JSONObject revert(@RequestParam("transfer_id") String transfer_id) throws ClassNotFoundException, SQLException {
+    	System.out.println("[INFO] /api/revert 收到访问请求，正在处理");
+    	
+    	JSONObject data = MySQL.revert(transfer_id);
+        String code = Constant.RESPONSE_CODE_SUCCESS_REALTIME; // 返回状态码
+        String msg = "冲正请求成功";// 返回信息
+        return response(code, msg, data);
+    }
+    
+    // 4.3抄表
+    @RequestMapping(value = "/read", method = {RequestMethod.GET})
+    public JSONObject read(@RequestParam("read_date") String read_date, @RequestParam("device_id") String device_id, @RequestParam("read_number") String read_number, @RequestParam("reader_id") String reader_id) throws ClassNotFoundException, SQLException, ParseException {
+    	System.out.println("[INFO] /api/read 收到访问请求，正在处理");
+    	
+    	JSONObject data = MySQL.read(read_date, device_id, read_number, reader_id);
+        String code = Constant.RESPONSE_CODE_SUCCESS_REALTIME; // 返回状态码
+        String msg = "抄表请求成功";// 返回信息
+        return response(code, msg, data);
+    }
+    
+    // 4.4对总账
+    @RequestMapping(value = "/check_total", method = {RequestMethod.GET})
+    public JSONObject check_total(@RequestParam("bank_id") String bank_id, @RequestParam("count") String count, @RequestParam("amount") String amount, @RequestParam("date") String date) throws ClassNotFoundException, SQLException, ParseException {
+    	System.out.println("[INFO] /api/check_total 收到访问请求，正在处理");
+    	
+    	JSONObject data = MySQL.check_total(bank_id, count, amount, date);
+        String code = Constant.RESPONSE_CODE_SUCCESS_REALTIME; // 返回状态码
+        String msg = "对总账请求成功";// 返回信息
+        return response(code, msg, data);
+    }
+    
+    // 4.5对明细
+    @RequestMapping(value = "/check_detail", method = {RequestMethod.GET})
+    public JSONObject check_detail(@RequestParam("bank_id") String bank_id, @RequestParam("date") String date) throws ClassNotFoundException, SQLException, ParseException {
+    	System.out.println("[INFO] /api/check_detail 收到访问请求，正在处理");
+    	
+    	JSONObject data = MySQL.check_detail(bank_id, date);
+        String code = Constant.RESPONSE_CODE_SUCCESS_REALTIME; // 返回状态码
+        String msg = "对明细请求成功";// 返回信息
+        return response(code, msg, data);
+    }
+    
+    // 4.6查询客户欠费金额及个人信息
+    @RequestMapping(value = "/query", method = {RequestMethod.GET})
+    public JSONObject query(@RequestParam("client_id") String client_id) throws ClassNotFoundException, SQLException, ParseException {
+    	System.out.println("[INFO] /api/query 收到访问请求，正在处理");
+    	
+    	JSONObject data = MySQL.query(client_id);
+        String code = Constant.RESPONSE_CODE_SUCCESS_REALTIME; // 返回状态码
+        String msg = "查询请求成功";// 返回信息
+        return response(code, msg, data);
     }
     
     /* 5.特殊要求类*/

@@ -2,7 +2,7 @@ new Vue({
     el: '#app',
     data: {
         gridData: [],
-        apiUrl: 'http://localhost:8080/api/pay',
+        apiUrl: 'http://localhost:8080/api/read',
         client_id: '',
         money: '',
         bank_id: '',

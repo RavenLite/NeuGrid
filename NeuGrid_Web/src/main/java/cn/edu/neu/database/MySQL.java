@@ -1,11 +1,17 @@
 package cn.edu.neu.database;
 
+import java.sql.CallableStatement;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.sql.Types;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
@@ -45,6 +51,14 @@ public class MySQL {
     private static PreparedStatement statementgetCostsByClient_ID;
     private static PreparedStatement statementgetTotalPaidFeeByClient_ID;
     
+    private static PreparedStatement statementgetAllBalanceLog;
+    private static PreparedStatement statementgetAllCostLog;
+    private static PreparedStatement statementgetAllErrorLog;
+    private static PreparedStatement statementgetAllPayLog;
+    private static PreparedStatement statementgetAllReadLog;
+    private static PreparedStatement statementgetAllTotalLog;
+    private static PreparedStatement statementgetAllTransferLog;
+    
     // 预编译语句结束
     public static void prepareSql() throws SQLException {
     	statementGetAllClients = conn.prepareStatement("SELECT * FROM client");
@@ -61,7 +75,149 @@ public class MySQL {
     	statementgetDevicesByClient_ID = conn.prepareStatement("SELECT * FROM device WHERE CLIENT_ID = ?");
     	statementgetCostsByClient_ID = conn.prepareStatement("SELECT * FROM cost_log WHERE DEVICE_ID IN (SELECT DEVICE_ID FROM device WHERE CLIENT_ID = ?) and PAY_STATE = 0");
     	statementgetTotalPaidFeeByClient_ID = conn.prepareStatement("SELECT sum(PAID_FEE) AS 'TOTAL_FEE' FROM cost_log WHERE DEVICE_ID IN (SELECT DEVICE_ID FROM device WHERE CLIENT_ID = ?) and PAY_STATE = 0");
+    	
+    	statementgetAllBalanceLog = conn.prepareStatement("SELECT * FROM balance_log");
+    	statementgetAllCostLog = conn.prepareStatement("SELECT * FROM cost_log");
+    	statementgetAllErrorLog = conn.prepareStatement("SELECT * FROM error_log");
+    	statementgetAllPayLog = conn.prepareStatement("SELECT * FROM pay_log");
+    	statementgetAllReadLog = conn.prepareStatement("SELECT * FROM read_log");
+    	statementgetAllTotalLog = conn.prepareStatement("SELECT * FROM total_log");
+    	statementgetAllTransferLog = conn.prepareStatement("SELECT * FROM transfer_log");
+    	
     }
+    // 缴费
+    public static JSONObject pay(String client_id, String money, String bank_id, String device_id) throws ClassNotFoundException, SQLException{
+    	before();
+    	
+    	CallableStatement cstmt = conn.prepareCall("{CALL pay(?, ?, ?, ?, ?)}");
+    	cstmt.setInt(1, Integer.valueOf(client_id));
+    	cstmt.setInt(2, Integer.valueOf(money));
+    	cstmt.setString(3, bank_id);
+    	cstmt.setInt(4, Integer.valueOf(device_id));
+    	cstmt.registerOutParameter(5, Types.VARCHAR);
+    	System.out.println(cstmt);
+    		
+		cstmt.execute();
+		String state = cstmt.getString(5);
+		JSONObject tempObj = new JSONObject();
+		tempObj.put("state", state);
+		
+		cstmt.close();
+		after();
+		return tempObj;
+    }
+    
+    // 冲正
+    public static JSONObject revert(String transfer_id) throws ClassNotFoundException, SQLException{
+    	before();
+    	
+    	CallableStatement cstmt = conn.prepareCall("{CALL pay(?, ?)}");
+    	cstmt.setInt(1, Integer.valueOf(transfer_id));
+    	cstmt.registerOutParameter(2, Types.VARCHAR);
+    		
+		cstmt.execute();
+		String state = cstmt.getString(2);
+		JSONObject tempObj = new JSONObject();
+		tempObj.put("state", state);
+		
+		cstmt.close();
+		after();
+		return tempObj;
+    }
+    
+    // 抄表
+    public static JSONObject read(String read_date, String device_id, String read_number, String reader_id) throws ClassNotFoundException, SQLException, ParseException{
+    	before();
+    	
+    	CallableStatement cstmt = conn.prepareCall("{CALL read_meter(?, ?, ?, ?)}");
+    	DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    	cstmt.setDate(1, (Date) sdf.parse(read_date));
+    	cstmt.setInt(2, Integer.valueOf(device_id));
+    	cstmt.setInt(3, Integer.valueOf(read_number));
+    	cstmt.setInt(4, Integer.valueOf(reader_id));
+    		
+		cstmt.execute();
+		String state = "抄表成功";
+		JSONObject tempObj = new JSONObject();
+		tempObj.put("state", state);
+		
+		cstmt.close();
+		after();
+		return tempObj;
+    }
+    
+    // 对总账
+    public static JSONObject check_total(String bank_id, String count, String amount, String date) throws ClassNotFoundException, SQLException, ParseException{
+    	before();
+    	
+    	CallableStatement cstmt = conn.prepareCall("{CALL check_total(?, ?, ?, ?, ?)}");
+    	DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    	cstmt.setString(1, bank_id);
+    	cstmt.setInt(2, Integer.valueOf(count));
+    	cstmt.setInt(3, Integer.valueOf(amount));
+    	cstmt.setDate(4, (Date) sdf.parse(date));
+    	cstmt.registerOutParameter(5, Types.VARCHAR);
+    		
+		cstmt.execute();
+		String state = cstmt.getString(5);
+		JSONObject tempObj = new JSONObject();
+		tempObj.put("state", state);
+		
+		cstmt.close();
+		after();
+		return tempObj;
+    }
+    
+    // 对明细
+    public static JSONObject check_detail(String bank_id, String date) throws ClassNotFoundException, SQLException, ParseException{
+    	before();
+    	
+    	CallableStatement cstmt = conn.prepareCall("{CALL check_detail(?, ?)}");
+    	DateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    	cstmt.setString(1, bank_id);
+    	cstmt.setDate(2, (Date) sdf.parse(date));
+    		
+		cstmt.execute();
+		String state = "对明细成功";
+		JSONObject tempObj = new JSONObject();
+		tempObj.put("state", state);
+		
+		cstmt.close();
+		after();
+		return tempObj;
+    }
+    
+    // 查询客户欠费金额及个人信息
+    public static JSONObject query(String client_id) throws ClassNotFoundException, SQLException, ParseException{
+    	before();
+    	
+    	CallableStatement cstmt = conn.prepareCall("{CALL query_total_fee(?, ?, ?, ?, ?)}");
+    	cstmt.setInt(1, Integer.valueOf(client_id));
+    	cstmt.registerOutParameter(1, Types.BIGINT);
+    	cstmt.registerOutParameter(2, Types.DECIMAL);
+    	cstmt.registerOutParameter(3, Types.VARCHAR);
+    	cstmt.registerOutParameter(4, Types.VARCHAR);
+    	cstmt.registerOutParameter(5, Types.DECIMAL);
+		cstmt.execute();
+		
+		String c_id = cstmt.getString(1);
+		String total_fee = cstmt.getString(2);
+		String client_name = cstmt.getString(3);
+		String address = cstmt.getString(4);
+		String balance = cstmt.getString(5);
+		
+		JSONObject tempObj = new JSONObject();
+		tempObj.put("client_id", c_id);
+		tempObj.put("total_fee", total_fee);
+		tempObj.put("client_name", client_name);
+		tempObj.put("address", address);
+		tempObj.put("balance", balance);
+		
+		cstmt.close();
+		after();
+		return tempObj;
+    }
+    
     
     /* 1.获取某表全部记录 */
     // 1.1获取全部客户信息
@@ -175,6 +331,35 @@ public class MySQL {
 		return true;
 		
 	}
+	
+	/* 3.获取全部记录信息 */
+	// 3.1获取balance_log
+	public static JSONArray getAllBalanceLog() throws ClassNotFoundException, SQLException {
+		before();
+		
+		ResultSet resultSet = statementGetAllBanks.executeQuery();
+        JSONArray result = new JSONArray();
+        while (resultSet.next()) {
+        	JSONObject tempObj = new JSONObject();
+        	tempObj.put("bank_id", resultSet.getString("BANK_ID"));
+        	tempObj.put("bank_name", resultSet.getString("BANK_NAME"));
+        	result.add(tempObj);
+        }
+        after();
+        return result;
+	}    
+	
+	// 3.2获取cost_log
+	
+	// 3.3获取error_log
+	
+	// 3.4获取pay_log
+	
+	// 3.5获取read_log
+	
+	// 3.6获取total_log
+	
+	// 3.7获取transfer_log
 	
 	
 	/* 5.根据指定属性获取满足条件的记录 */

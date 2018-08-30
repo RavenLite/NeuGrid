@@ -295,6 +295,13 @@
                             <span>查询</span>
                         </a>
                     </li>
+
+                    <li class=''>
+                        <a href='read.html'>
+                            <i class='icon-pencil'></i>
+                            <span>抄表</span>
+                        </a>
+                    </li>
                     <li class='active'>
                         <a href='pay.html'>
                             <i class='icon-money'></i>
@@ -416,7 +423,7 @@
             </div>
         </nav>
         <section id='content'>
-            <div class='container-fluid' id="app">
+            <div class='container-fluid'>
                 <div class='row-fluid' id='content-wrapper' style="height:50px">
                     <div class='span12'>
                         <div class='page-header'>
@@ -428,6 +435,92 @@
                     </div>
                 </div>
 
+                <div class='row-fluid' id="app">
+                    <div class='span12 box bordered-box blue-border'>
+                        <div class='box-header blue-background'>
+                            <div class='title'>
+                                <i class='icon-ok-circle'></i>
+                                缴费
+                            </div>
+                            <div class='actions'>
+                                <a href="#" class="btn box-remove btn-mini btn-link"><i class='icon-remove'></i>
+                                </a>
+                                <a href="#" class="btn box-collapse btn-mini btn-link"><i></i>
+                                </a>
+                            </div>
+                        </div>
+                        <div class='box-content box-double-padding'>
+                            <form class='form' style='margin-bottom: 0;' />
+                                <fieldset>
+
+                                    <div class='span7 '>
+                                        <div class='control-group'>
+                                            <label class='control-label' for='inputText1'><strong>客户ID</strong></label>
+                                            <div class='controls'>
+                                                <input id='inputText1' placeholder='' type='text' v-model="client_id" />
+                                            </div>
+                                        </div>
+                        
+                                        <div class='control-group'>
+                                            <label class='control-label' for='appendedPrependedInput1'><strong>缴费金额</strong></label>
+                                            <div class='controls'>
+                                                <div class='input-prepend input-append'>
+                                                    <span class='add-on'>￥</span>
+                                                    <input id='appendedPrependedInput1' type='text' v-model="money" />
+                                                    <span class='add-on'>.00</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class='control-group'>
+                                            <label class='control-label'><strong>选择银行</strong></label>
+                                            <div class='controls'>
+                                                <label class='radio'>
+                                                    <input type='radio' value='CCB' name="myradio" v-model="bank_id"/>
+                                                    <img src="./images/CCB.jpg" style="width:400px">
+                                                </label>
+                                                <label class='radio'>
+                                                    <input type='radio' value='CMB' name="myradio" v-model="bank_id"/>
+                                                    <img src="./images/CMB.jpg" style="width:300px">
+                                                </label>
+                                                <label class='radio'>
+                                                    <input type='radio' value='ICBC' name="myradio" v-model="bank_id"/>
+                                                    <img src="./images/ICBC.jpg" style="width:400px">
+                                                </label>
+                                            </div>
+                                        </div>
+                        
+                                        <div class='control-group'>
+                                            <label class='control-label'><strong>设备ID</strong></label>
+                                            <div class='controls'>
+                                                <input id='inputText1' placeholder='' type='text' v-model="device_id"/>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class='span4'>
+                                        <div class='lead'>
+                                            <i class='icon-github text-contrast'></i>
+                                            Lorem ipsum
+                                        </div>
+                                        <small class='muted'>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec nisl est, vulputate at porttitor non, interdum a mauris. Phasellus imperdiet gravida pulvinar.</small>
+                                    </div>
+                                </fieldset>
+                                <hr class='hr-normal' />
+                                <div class='form-actions' style='margin-bottom: 0;' v-on:click="submit()">
+                                    <div class='text-left'>
+                                        <div class='btn btn-primary btn-large'>
+                                            <i class='icon-save'></i>
+                                            提交
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
             </div>
         </section>
     </div>
