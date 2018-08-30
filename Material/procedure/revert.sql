@@ -1,4 +1,4 @@
-CREATE DEFINER=`skip-grants user`@`skip-grants host` PROCEDURE `revert`(IN t_id BIGINT, IN d_id BIGINT, OUT state VARCHAR(9))
+CREATE DEFINER=`skip-grants user`@`skip-grants host` PROCEDURE `revert`(IN t_id BIGINT, OUT state VARCHAR(9))
 exist:
 BEGIN
 		-- t_id 银行流水id
@@ -11,6 +11,7 @@ BEGIN
 		DECLARE temp_pay_amount DECIMAL(9,2); -- 误操作金额
 		DECLARE temp_balance DECIMAL(9,2); -- 客户当前余额
 		DECLARE temp_pay_time DATETIME; -- 误操作付款时间
+		DECLARE real_pay_amount DECIMAL(9,2); -- 实际付款金额
 		DECLARE temp_cost_id BIGINT;
 		
 		DECLARE	temp_actual_fee DECIMAL(9,2); -- 总金额(写入change_log)
@@ -44,14 +45,22 @@ BEGIN
 		SELECT balance INTO temp_balance
 				FROM client
 		WHERE client_id = temp_client_id;
+		-- 2.1查找所付款
+ 		SELECT pay_time INTO temp_pay_time
+ 		FROM pay_log
+ 		WHERE transfer_id = t_id AND pay_amount > 0;
+		-- 根据余额变化表计算花的钱
+		SELECT MAX(now_balance) - MIN(now_balance) INTO real_pay_amount
+		FROM balance_log
+		WHERE date = temp_pay_time;
 		
- 		UPDATE client SET balance = temp_balance + temp_pay_amount WHERE client_id = temp_client_id;
- 		INSERT balance_log(now_balance, client_id, action, date) VALUES(temp_balance + temp_pay_amount, temp_client_id, '03', NOW());
+ 		UPDATE client SET balance = temp_balance + real_pay_amount WHERE client_id = temp_client_id;
+ 		INSERT balance_log(now_balance, client_id, action, date) VALUES(temp_balance + real_pay_amount, temp_client_id, '冲正', NOW());
 		
  		-- 3.取消误操作，生成负值缴费记录
  		-- 3.1生成负值的pay_log
  		INSERT INTO pay_log(client_id, device_id, pay_time, pay_amount, pay_type, bank_id, transfer_id)
- 		VALUES(temp_client_id, temp_device_id, NOW(), -1*(temp_balance + temp_pay_amount), '02', temp_bank_id, t_id);
+ 		VALUES(temp_client_id, temp_device_id, NOW(), -1* temp_pay_amount, '冲正', temp_bank_id, t_id);
  		
  		-- 3.2根据t_id找到付款时间
  		SELECT pay_time INTO temp_pay_time

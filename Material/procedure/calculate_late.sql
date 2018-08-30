@@ -16,9 +16,9 @@ BEGIN
     END IF;
 		
 		IF YEAR(date)=YEAR(NOW()) THEN
-		SET temp_fee = paid_fee * (TO_DAYS(NOW()) - TO_DAYS(date)) * add_price_this_year;
+				SET temp_fee = paid_fee * (TO_DAYS(NOW()) - TO_DAYS(date)) * add_price_this_year;
 		ELSE
-		SET temp_fee = paid_fee * (TO_DAYS(str_to_date((concat('31-12-', YEAR(date))), '%d-%m-%Y')) - TO_DAYS(date)) * add_price_this_year + paid_fee * (TO_DAYS(NOW())-TO_DAYS(str_to_date((concat('31-12-', YEAR(date))), '%d-%m-%Y'))) * add_price_other_year;
+				SET temp_fee = paid_fee * (TO_DAYS(str_to_date((concat('31-12-', YEAR(date))), '%d-%m-%Y')) - TO_DAYS(date)) * add_price_this_year + paid_fee * (TO_DAYS(NOW())-TO_DAYS(str_to_date((concat('31-12-', YEAR(date))), '%d-%m-%Y'))) * add_price_other_year;
 		END IF;
 
 		RETURN temp_fee;

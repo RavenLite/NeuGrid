@@ -11,15 +11,11 @@ BEGIN
 		DECLARE temp_A_client_id BIGINT;
 		DECLARE temp_B_client_id BIGINT;
 		DECLARE v_finished INTEGER DEFAULT 0;
-		-- 1.利用right join, left join, union实现full join
+		-- 1.生成总表
 		DECLARE error_log_cursor CURSOR FOR 
 		SELECT A.transfer_id, B.transfer_id, A.pay_amount, B.transfer_amount, A.pay_time, B.transfer_time, A.client_id, B.client_id 
-		FROM pay_log A RIGHT JOIN transfer_log B ON A.transfer_id = B.transfer_id 
-		WHERE B.bank_id = b_id AND TO_DAYS(B.transfer_time) = TO_DAYS(date)
-		UNION
-		SELECT A.transfer_id, B.transfer_id, A.pay_amount, B.transfer_amount, A.pay_time, B.transfer_time, A.client_id, B.client_id 
-		FROM pay_log A LEFT JOIN transfer_log B ON A.transfer_id = B.transfer_id 
-		WHERE A.bank_id = b_id AND TO_DAYS(A.pay_time) = TO_DAYS(date) AND pay_type = '01';
+		FROM transfer_log B LEFT JOIN (SELECT * FROM pay_log WHERE pay_type = '缴费') A ON A.transfer_id = B.transfer_id 
+		WHERE B.bank_id = b_id AND TO_DAYS(B.transfer_time) = TO_DAYS(date);
 		
 		DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_finished = 1;
 		DECLARE CONTINUE HANDLER FOR SQLEXCEPTION SELECT 'Exception';
@@ -35,13 +31,13 @@ BEGIN
 				
 				IF ISNULL(temp_A_transfer_id) = 1 THEN
 						INSERT error_log(account_time, bank_id, transfer_id, client_id, bank_amount, enterprise_amount, error_type)
-						VALUES (temp_B_transfer_time, b_id, temp_B_transfer_id, temp_B_client_id, temp_B_transfer_amount, 0, '01');
+						VALUES (temp_B_transfer_time, b_id, temp_B_transfer_id, temp_B_client_id, temp_B_transfer_amount, 0, '企业方无流水信息');
 				ELSEIF ISNULL(temp_B_transfer_id) = 1 THEN
 						INSERT error_log(account_time, bank_id, transfer_id, client_id, bank_amount, enterprise_amount, account_info)
-						VALUES (temp_A_pay_time, b_id, temp_A_transfer_id, temp_A_client_id, 0, temp_A_pay_amount, '02');
- 				ELSEIF temp_A_pay_amount <> temp_B_pay_amount THEN 
+						VALUES (temp_A_pay_time, b_id, temp_A_transfer_id, temp_A_client_id, 0, temp_A_pay_amount, '银行方无流水信息');
+ 				ELSEIF temp_A_pay_amount <> temp_B_transfer_amount THEN 
  						INSERT error_log(account_time, bank_id, transfer_id, client_id, bank_amount, enterprise_amount, account_info)
- 						VALUES (temp_A_pay_time, b_id, temp_A_transfer_id, temp_A_client_id, temp_B_transfer_amount, temp_A_pay_amount, '03');
+ 						VALUES (temp_A_pay_time, b_id, temp_A_transfer_id, temp_A_client_id, temp_B_transfer_amount, temp_A_pay_amount, '金额不等');
  				END IF;
 		END LOOP find_error;
     CLOSE error_log_cursor;

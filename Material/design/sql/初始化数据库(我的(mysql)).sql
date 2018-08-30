@@ -17,8 +17,8 @@ DROP TABLE IF EXISTS code_table;
 DROP TABLE IF EXISTS device;
 DROP TABLE IF EXISTS reader;
 
--- CREATE SCHEMA neugrid;
--- USE neugrid;
+CREATE SCHEMA neugrid;
+USE neugrid;
 
 /*==============================================================*/
 /* Table 1: ACCOUNT	                                               */
@@ -71,7 +71,7 @@ CREATE TABLE cost_log
    cost_id              BIGINT AUTO_INCREMENT,		-- 账单id，自增
    device_id            BIGINT NOT NULL,			-- 设备id
    date                 DATETIME NOT NULL,			-- 生成日期
-   begin_number         BIGINT,						-- 初始表数
+   begin_number         BIGINT DEFAULT 0,			-- 初始表数
    end_number           BIGINT,						-- 抄表表数
    basic_cost           DECIMAL(9,2),				-- 基础花费
    additional_cost_1    DECIMAL(9,2),				-- 附加费1
@@ -205,7 +205,8 @@ CREATE TABLE change_log
    late_fee_1		    DECIMAL(9,2),				-- 改变前滞纳金
    pay_date_1			DATETIME,					-- 改变前付款日期
    already_fee_1		DECIMAL(9,2),				-- 改变前已付款金额
-   pay_state_1			VARCHAR(2),					-- 改变前付款状态
+   pay_state_1			VARCHAR(9),					-- 改变前付款状态
+   change_time			DATETIME,					-- 改变发生时的时间
    PRIMARY KEY (change_id)
 );
 
@@ -293,8 +294,6 @@ insert into TRANSFER_LOG (bank_id, client_id, transfer_amount, transfer_time)
 values ('CMB', 1001, 150, str_to_date('20-08-2018 00:47:48', '%d-%m-%Y %H:%i:%s'));
 insert into TRANSFER_LOG (bank_id, client_id, transfer_amount, transfer_time)
 values ('ICBC', 1003, 81, str_to_date('20-08-2018 19:54:56', '%d-%m-%Y %H:%i:%s'));
-insert into TRANSFER_LOG (bank_id, client_id, transfer_amount, transfer_time)
-values ('CMB', 1001, 50, str_to_date('20-08-2018 00:47:27', '%d-%m-%Y %H:%i:%s'));
 commit;
 
 insert into READER (READER_ID, READER_NAME)
